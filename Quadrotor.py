@@ -1,5 +1,4 @@
 import numpy as np
-from gym import core, spaces
 from numpy.linalg import inv, norm
 import scipy.integrate
 from scipy.spatial.transform import Rotation
@@ -26,7 +25,7 @@ def quat_dot(quat, omega):
     quat_dot = quat_dot - quat_err * quat_err_grad
     return quat_dot
 
-class Quadrotor(core.Env):
+class Quadrotor():
     """
     Quadrotor forward dynamics model.
     """
