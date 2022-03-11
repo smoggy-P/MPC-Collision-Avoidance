@@ -17,14 +17,7 @@ def mpc_control(quadrotor, N, x_init, x_target):
     # For each stage in the MPC horizon
     Q = np.array([[weight_tracking, 0], [0,0]])
     for n in range(N):
-        # EXERCISE: Implement the cost components and/or constraints that need to be satisfied for each step, here   
         cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n], weight_input))
-        constraints += [x[0,n+1] >= -1]
-        constraints += [x[1,n+1] >= -10]
-        constraints += [x[0,n+1] <= 100]
-        constraints += [x[1,n+1] <= 25]
-        constraints += [u[:,n] <= 4]
-        constraints += [u[:,n] >= -4]
         constraints += [x[:,n+1] == quadrotor.A @ x[:,n] + quadrotor.B @ u[:,n]]
 
     # Implement the cost components and/or constraints that need to be added once, here
