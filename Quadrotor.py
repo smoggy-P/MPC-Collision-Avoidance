@@ -25,7 +25,7 @@ def quat_dot(quat, omega):
     quat_dot = quat_dot - quat_err * quat_err_grad
     return quat_dot
 
-class Quadrotor():
+class Quadrotor_nonlinear():
     """
     Quadrotor forward dynamics model.
     """
@@ -183,3 +183,50 @@ class Quadrotor():
         """
         state = {'x': s[0:3], 'v': s[3:6], 'q': s[6:10], 'w': s[10:13]}
         return state
+
+class Quadrotor_linear():
+    def __init__(self):
+        """
+        Define model parameters and state space for linear quadrotor dynamics
+        """
+
+        self.mass            =  0.030  # kg
+        self.Ixx             = 1.43e-5  # kg*m^2
+        self.Iyy             = 1.43e-5  # kg*m^2
+        self.Izz             = 2.89e-5  # kg*m^2
+        self.arm_length      = 0.046  # meters
+        self.rotor_speed_min = 0  # rad/s
+        self.rotor_speed_max = 2500  # rad/s
+        self.k_thrust        = 2.3e-08  # N/(rad/s)**2
+        self.k_drag          = 7.8e-11   # Nm/(rad/s)**2
+
+        # Additional constants.
+        self.inertia = np.diag(np.array([self.Ixx, self.Iyy, self.Izz])) # kg*m^2
+        self.g = 9.81 # m/s^2
+
+        # Precomputes
+        k = self.k_drag/self.k_thrust
+        L = self.arm_length
+        self.to_TM = np.array([[1,  1,  1,  1],
+                               [ 0,  L,  0, -L],
+                               [-L,  0,  L,  0],
+                               [ k, -k,  k, -k]])
+        self.inv_inertia = inv(self.inertia)
+        self.weight = np.array([0, 0, -self.mass*self.g])
+        self.t_step = 0.01
+
+        # Continuous state space
+        self.A_c = 
+        self.B_c =
+        self.C_c = 
+        self.D_c =
+
+        # Discretization state space
+        self.A = np.eye(2) + self.A_c * self.t_step
+        self.B = self.B_c * self.t_step
+        self.C = self.C_c
+        self.D = self.D_c
+
+
+    def next_x(self, x, u):
+        return self.A.dot(x) + self.B.transpose().dot(u)
