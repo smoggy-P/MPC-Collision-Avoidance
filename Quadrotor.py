@@ -205,9 +205,7 @@ class Quadrotor_linear():
         self.to_TM = np.array([[1,  1,  1,  1],
                                [ 0,  L,  0, -L],
                                [-L,  0,  L,  0]])
-        self.inv_inertia = inv(self.inertia)
-        self.weight = np.array([0, 0, -self.mass*self.g])
-        self.t_step = 0.01
+        self.t_step = 0.1
 
         """
         Continuous state space without considering yawing(assuming yaw angle is 0 for all the time)
@@ -241,11 +239,11 @@ class Quadrotor_linear():
         self.D_c = np.zeros((1,4))
 
         # Discretization state space
-        self.A = np.eye(2) + self.A_c * self.t_step
+        self.A = np.eye(10) + self.A_c * self.t_step
         self.B = self.B_c * self.t_step
         self.C = self.C_c
         self.D = self.D_c
 
 
     def next_x(self, x, u):
-        return self.A.dot(x) + self.B.transpose().dot(u)
+        return self.A.dot(x).reshape(-1,1) + self.B.dot(u)
