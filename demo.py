@@ -47,9 +47,9 @@ if __name__ == "__main__":
 
     x_init = np.zeros(10)
     x_target = np.zeros(10)
-    x_target[0] = 5
-    x_target[1] = 5
-    x_target[2] = 5
+    x_target[0] = 2
+    x_target[1] = 2
+    x_target[2] = 2
     x_next = x_init
     real_trajectory = {'x': [], 'y': [], 'z': []}
 
