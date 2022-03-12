@@ -4,15 +4,15 @@ import numpy as np
 from Quadrotor import Quadrotor_linear
 
 def mpc_control(quadrotor, N, x_init, x_target):
-    weight_input = 0.2*np.eye(1)    # Weight on the input
+    weight_input = 0.2*np.eye(4)    # Weight on the input
     weight_tracking = 1.0           # Weight on the tracking state
     
     cost = 0.
     constraints = []
     
     # Create the optimization variables
-    x = cp.Variable((2, N + 1)) # cp.Variable((dim_1, dim_2))
-    u = cp.Variable((1, N))
+    x = cp.Variable((10, N + 1)) # cp.Variable((dim_1, dim_2))
+    u = cp.Variable((4, N))
 
     # For each stage in the MPC horizon
     Q = np.array([[weight_tracking, 0], [0,0]])
