@@ -48,7 +48,7 @@ def visualization(real_trajectory, obstacle_list):
     ani = animation.FuncAnimation(fig=fig,
                                 func=animate,
                                 frames=len(real_trajectory['x']),
-                                interval=1,
-                                repeat=False,
+                                interval=5,
+                                repeat=True,
                                 blit=False)
     plt.show()
