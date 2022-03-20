@@ -23,7 +23,7 @@ def get_coeff(p,r_drone,p_obs,r_obs):
     a=-(p-p_obs)[0]/(p-p_obs)[1]
     b=point[1]-a*point[0]
     A=np.array([-a,1])
-    if np.dot(A,p)>b:
+    if np.dot(A,p) > b:
         A=-A
         b=-b
     return A,b
