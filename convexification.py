@@ -83,4 +83,4 @@ def get_intermediate_goal(pos, goal_pos, A,b):
     return x.value
 
 
-A,b=plot_convex_zone(p,r_drone,goal,obstacle_list)
+# A,b=plot_convex_zone(p,r_drone,goal,obstacle_list)
