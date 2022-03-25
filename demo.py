@@ -12,14 +12,18 @@ if __name__ == "__main__":
     x_target = np.zeros(10)
     x_target[0] = 6
     x_target[1] = -5
-    x_target[2] = 0
+    x_target[2] = 2
     x_next = x_init
-
+    A,b=convexify(x_init[:2].flatten(),0.5,obstacle_list)
+    inter_goal=get_intermediate_goal(x_init[:2].flatten(), x_target[:2].flatten(), A,b).flatten()
+    x_intergoal=np.zeros(10)
+    x_intergoal[:2]=inter_goal
+    x_intergoal[2]=2
     real_trajectory = {'x': [], 'y': [], 'z': []}
 
 
     while np.linalg.norm(x_next.flatten() - x_target) >= 0.1:
-        u = mpc_control(quadrotor, 10, x_next, x_target).reshape(-1,1)
+        u = mpc_control(quadrotor, 10, x_next, x_intergoal).reshape(-1,1)
 
         real_trajectory['x'].append(x_next[0])
         real_trajectory['y'].append(x_next[1])
@@ -33,7 +37,6 @@ if __name__ == "__main__":
         x_intergoal[2]=2
         
         print(x_next[:3].flatten())
-        print(x_next.flatten())
 
     visualization(real_trajectory, obstacle_list)
     
