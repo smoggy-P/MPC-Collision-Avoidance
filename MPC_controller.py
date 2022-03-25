@@ -1,7 +1,7 @@
 import cvxpy as cp
 import numpy as np
 from numpy import newaxis
-from convexification import obstacle_list, convexify
+from convexification import obstacle_list, convexify, get_intermediate_goal
 
 def mpc_control(quadrotor, N, x_init, x_target):
     weight_input = 0.2*np.eye(4)    # Weight on the input
@@ -15,11 +15,11 @@ def mpc_control(quadrotor, N, x_init, x_target):
 
     # Get constraints from obstacle list
     A_obs, b_obs= convexify(x_init[:2].flatten(), 0.5, obstacle_list)
-
+    x_inter = get_intermediate_goal(x_target[:2], A_obs, b_obs)
     # For each stage in the MPC horizon
-    Q = np.identity(10)
+    Q = np.identity(2)
     for n in range(N):
-        cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n], weight_input))
+        cost += (cp.quad_form((x[:2,n+1]-x_inter.flatten()),Q)  + cp.quad_form(u[:,n], weight_input))
         constraints += [x[:,n+1] == quadrotor.A @ x[:,n] + quadrotor.B @ u[:,n]]
         constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
     # Implement the cost components and/or constraints that need to be added once, here
