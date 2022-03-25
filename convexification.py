@@ -66,7 +66,7 @@ def plot_convex_zone(p,r_drone,pos_goal,obstacle_list):
     plt.show()
     return A,b
     
-def get_intermediate_goal(goal_pos, A,b):
+def get_intermediate_goal(pos, goal_pos, A,b):
     cost = 0.
     constraints = []
     
