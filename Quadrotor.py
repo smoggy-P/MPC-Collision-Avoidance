@@ -64,8 +64,10 @@ class Quadrotor_linear():
         self.C = self.C_c
         self.D = self.D_c
 
+    def next_x(self, x, u):
+        return self.A.dot(x).reshape(-1,1) + self.B.dot(u)
 
-    def next_x(self, quadrotor):
+    def from_nonlinear(self, quadrotor):
         linearized_state = np.zeros(10).reshape(-1,1)
         linearized_state[:3] = quadrotor.state['x'].reshape(-1,1)
         linearized_state[3:6] = quadrotor.state['v'].reshape(-1,1)
