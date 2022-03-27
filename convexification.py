@@ -76,13 +76,13 @@ def get_new_constraints(pos,r_drone, goal_pos, A,b):
     for i in range(len(b)):
         #new_b.append(np.min((v[1]+b[i]-A[0]*v[0],-v[1]+b[i]+A[0]*v[0])))
         new_b.append(b[i]-r_drone/(np.sin(np.arctan(1/np.abs(A[i,0])))))
-        print(np.arctan(1/np.abs(A[i,0])))
+        # print(np.arctan(1/np.abs(A[i,0])))
     return np.array(new_b)
 def get_intermediate_goal(pos,r_drone, goal_pos, A,b):
-    print(b)
+    # print(b)
     new_b=get_new_constraints(pos,r_drone, goal_pos, A,b)
-    print(new_b)
-    print(b-new_b)
+    # print(new_b)
+    # print(b-new_b)
     cost = 0.
     constraints = []
     
@@ -99,4 +99,4 @@ def get_intermediate_goal(pos,r_drone, goal_pos, A,b):
     return x.value
 
 
-A,b=plot_convex_zone(p,r_drone,goal,obstacle_list)
+# A,b=plot_convex_zone(p,r_drone,goal,obstacle_list)

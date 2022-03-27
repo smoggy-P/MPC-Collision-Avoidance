@@ -1,6 +1,8 @@
+from math import degrees
 import numpy as np
 import scipy.integrate
 from scipy.spatial.transform import Rotation
+from numpy.linalg import inv
 
 class Quadrotor_linear():
     def __init__(self):
@@ -63,8 +65,14 @@ class Quadrotor_linear():
         self.D = self.D_c
 
 
-    def next_x(self, x, u):
-        return self.A.dot(x).reshape(-1,1) + self.B.dot(u)
+    def next_x(self, quadrotor):
+        linearized_state = np.zeros(10).reshape(-1,1)
+        linearized_state[:3] = quadrotor.state['x'].reshape(-1,1)
+        linearized_state[3:6] = quadrotor.state['v'].reshape(-1,1)
+        r = Rotation.from_quat(quadrotor.state['q'])
+        linearized_state[6:8] = r.as_euler('zyx', degrees=True)[1:].reshape(-1,1)
+        linearized_state[8:10] = quadrotor.state['w'][1:].reshape(-1,1)
+        return linearized_state
 
 
 
@@ -145,7 +153,7 @@ class Quadrotor():
         rotor_thrusts = np.clip(cmd_rotor_forces, self.cmd_rotor_forces_min, self.cmd_rotor_forces_max)
         TM = self.to_TM @ rotor_thrusts
         T = TM[0]
-        M = TM[1:4]
+        M = TM[1:4].flatten()
         # Form autonomous ODE for constant inputs and integrate one time step.
         def s_dot_fn(t, s):
             return self._s_dot_fn(t, s, T, M)
@@ -157,11 +165,7 @@ class Quadrotor():
         s = sol['y'][:,-1]
         # turn state back to dict
         self.state = Quadrotor._unpack_state(s)
-        # Re-normalize unit quaternion.
-        reward = 0
-        done = 0
-        info = {}
-        return self.state, reward, done, info
+        return self.state
     def _s_dot_fn(self, t, s, u1, u2):
         """
         Compute derivative of state for quadrotor given fixed control inputs as
