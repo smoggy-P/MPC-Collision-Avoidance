@@ -6,7 +6,7 @@ import control
 
 
 def mpc_control(quadrotor_linear, N, x_init, x_target,A_obs,b_obs):
-    weight_input = 0.2*np.eye(4)    # Weight on the input
+    weight_input = 0*np.eye(4)    # Weight on the input
     
     cost = 0.
     constraints = []
@@ -23,7 +23,7 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,A_obs,b_obs):
     for n in range(N):
         cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n], weight_input))
         constraints += [x[:,n+1] == quadrotor_linear.A @ x[:,n] + quadrotor_linear.B @ u[:,n]]
-        constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
+        # constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
     # Implement the cost components and/or constraints that need to be added once, here
     constraints += [x[:,0] == x_init.flatten()]
     
@@ -35,7 +35,7 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,A_obs,b_obs):
     return u[:, 0].value
 
 def mpc_control_stable(quadrotor, N, x_init, x_target,A_obs,b_obs,c=1):
-    weight_input = 0.2*np.eye(4)    # Weight on the input
+    weight_input = 0.02*np.eye(4)    # Weight on the input
     
     cost = 0.
     constraints = []
