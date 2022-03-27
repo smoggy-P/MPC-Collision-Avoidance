@@ -2,6 +2,7 @@ import cvxpy as cp
 import numpy as np
 from numpy import newaxis
 from convexification import obstacle_list, convexify
+import control
 
 def mpc_control(quadrotor, N, x_init, x_target,A_obs,b_obs):
     weight_input = 0.2*np.eye(4)    # Weight on the input
@@ -24,7 +25,7 @@ def mpc_control(quadrotor, N, x_init, x_target,A_obs,b_obs):
         constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
     # Implement the cost components and/or constraints that need to be added once, here
     constraints += [x[:,0] == x_init.flatten()]
-    constraints += [x[:,N] == x_target.flatten()]
+    #constraints += [x[:,N] == x_target.flatten()]
     
     # Solves the problem
     problem = cp.Problem(cp.Minimize(cost), constraints)
@@ -33,3 +34,44 @@ def mpc_control(quadrotor, N, x_init, x_target,A_obs,b_obs):
     # We return the MPC input
     return u[:, 0].value
 
+def mpc_control_stable(quadrotor, N, x_init, x_target,A_obs,b_obs,c=1):
+    weight_input = 0.2*np.eye(4)    # Weight on the input
+    
+    cost = 0.
+    constraints = []
+    
+    # Create the optimization variables
+    x = cp.Variable((10, N + 1)) # cp.Variable((dim_1, dim_2))
+    u = cp.Variable((4, N))
+
+    # Get constraints from obstacle list
+    
+
+    # For each stage in the MPC horizon
+    Q = np.identity(10)
+    R = weight_input
+    
+    P, L, K = control.dare(quadrotor.A, quadrotor.B, Q, R)
+    eig_val,eig_vec=np.linalg.eig(P)
+    #print(eig_val,eig_vec)
+    for n in range(N):
+        cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n], weight_input))
+        constraints += [x[:,n+1] == quadrotor.A @ x[:,n] + quadrotor.B @ u[:,n]]
+        constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
+    # Implement the cost components and/or constraints that need to be added once, here
+    cost+=cp.quad_form((x[:,N]-x_target),P)
+    constraints += [x[:,0] == x_init.flatten()]
+    
+    for j in range(len(eig_val)):
+        print("*************")
+        #print(np.shape(eig_vec[j]))
+        #print((x[:,N]-x_target)  @ eig_vec[j])
+        constraints+= [(x[:,N]-x_target)  @ eig_vec[j]<=eig_val[j]/c]
+    #constraints += [cp.quad_form((x[:,N]-x_target),P) <= c]
+    
+    # Solves the problem
+    problem = cp.Problem(cp.Minimize(cost), constraints)
+    problem.solve(solver=cp.OSQP)
+
+    # We return the MPC input
+    return u[:, 0].value
