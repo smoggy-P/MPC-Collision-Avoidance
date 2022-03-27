@@ -16,9 +16,9 @@ def data_for_cylinder_along_z(center_x,center_y,radius,height_z):
 def visualization(real_trajectory, obstacle_list):
     fig = plt.figure()
     ax1 = p3.Axes3D(fig) # 3D place for drawing
-    real_trajectory['x'] = np.array(real_trajectory['x'])
-    real_trajectory['y'] = np.array(real_trajectory['y'])
-    real_trajectory['z'] = np.array(real_trajectory['z'])
+    real_trajectory['x'] = np.array(real_trajectory['x'],dtype=object)
+    real_trajectory['y'] = np.array(real_trajectory['y'],dtype=object)
+    real_trajectory['z'] = np.array(real_trajectory['z'],dtype=object)
     point, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], 'ro', ms=10, label='Quadrotor')
     line, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], label='Real_Trajectory')
 
@@ -26,9 +26,9 @@ def visualization(real_trajectory, obstacle_list):
     ax1.set_xlabel('x')
     ax1.set_ylabel('y')
     ax1.set_zlabel('z')
-    plt.xlim((-5, 5))
-    plt.ylim((-5, 5))
-    ax1.set_zlim(0, 3)
+    ax1.set_xlim3d((-5, 5))
+    ax1.set_ylim3d((-5, 5))
+    ax1.set_zlim3d((0, 3))
     ax1.set_title('3D animate')
     ax1.view_init(30, 35)
     ax1.legend(loc='lower right')
