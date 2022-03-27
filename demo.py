@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     x_init = np.zeros(10)
     x_target = np.zeros(10)
-    x_target[0] = 6
+    x_target[0] = -6
     x_target[1] = -5
     x_target[2] = 2
     x_next = x_init
@@ -23,7 +23,9 @@ if __name__ == "__main__":
 
 
     while np.linalg.norm(x_next.flatten() - x_target) >= 0.1:
-        A_obs, b_obs= convexify(x_init[:2].flatten(), 0.5, obstacle_list)
+        
+        A_obs,b_obs=convexify(x_next[:2].flatten(),0.5,obstacle_list)
+        
         u = mpc_control(quadrotor, 10, x_next, x_intergoal,A_obs,b_obs).reshape(-1,1)
 
         real_trajectory['x'].append(x_next[0])
