@@ -19,7 +19,7 @@ def visualization(real_trajectory, obstacle_list):
     real_trajectory['x'] = np.array(real_trajectory['x'],dtype=object)
     real_trajectory['y'] = np.array(real_trajectory['y'],dtype=object)
     real_trajectory['z'] = np.array(real_trajectory['z'],dtype=object)
-    point, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], 'ro', ms=10, label='Quadrotor')
+    point, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], 'ro', ms=25, label='Quadrotor')
     line, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], label='Real_Trajectory')
 
 

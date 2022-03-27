@@ -98,8 +98,10 @@ class Quadrotor():
         self.Iyy             = 1.43e-5  # kg*m^2
         self.Izz             = 2.89e-5  # kg*m^2
         self.arm_length      = 0.046  # meters
-        self.rotor_speed_min = 0  # rad/s
-        self.rotor_speed_max = 2500  # rad/s
+
+        #TODO: change force limit
+        self.cmd_rotor_forces_min = 0  # rad/s
+        self.cmd_rotor_forces_max = 2500  # rad/s
         self.k_thrust        = 2.3e-08  # N/(rad/s)**2
         self.k_drag          = 7.8e-11   # Nm/(rad/s)**2
         # Additional constants.
@@ -134,17 +136,13 @@ class Quadrotor():
         s[9] = quat[3]
         self.state = self._unpack_state(s)
         return self.state
-    def step(self, cmd_rotor_speeds):
+    def step(self, cmd_rotor_forces):
         '''
-        Considering the max and min of rotor speeds
-        action is a 4 dimensional vector: conmmand rotor speeds
+        Considering the max and min of rotor forces
+        action is a 4 dimensional vector: conmmand rotor forces
         action = [F1, F2, F3, F4]
         '''
-        rotor_speeds = np.clip(cmd_rotor_speeds, self.rotor_speed_min, self.rotor_speed_max)
-        rotor_thrusts = self.k_thrust * rotor_speeds**2
-        '''
-        Next, [w1, w2, w3, w4] into [F Mx My Mz]
-        '''
+        rotor_thrusts = np.clip(cmd_rotor_forces, self.cmd_rotor_forces_min, self.cmd_rotor_forces_max)
         TM = self.to_TM @ rotor_thrusts
         T = TM[0]
         M = TM[1:4]
