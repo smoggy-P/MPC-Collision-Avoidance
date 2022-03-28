@@ -14,11 +14,11 @@ obs3=[7,-1.9,2] #pos_x,pos_y,radius
 
 obstacle_list=[obs1,obs2,obs3]
 
-goal = np.array([-6,-5,2]) #pos_x,pos_y,pos_z
+goal = np.array([-6,-9,2]) #pos_x,pos_y,pos_z
 
 if __name__ == "__main__":
     
-    N=10
+    N = 10
 
     quadrotor_linear = Quadrotor_linear()
     quadrotor = Quadrotor()
@@ -33,32 +33,41 @@ if __name__ == "__main__":
     x_target[1] = goal[1]
     x_target[2] = goal[2]
     x_next = x_init
+
     
-    A,b=convexify(x_init[:2].flatten(),0.5,obstacle_list)
+    A,b = convexify(x_init[:2].flatten(),0.5,obstacle_list)
 
     inter_goal=get_intermediate_goal(x_init[:2].flatten(), 0.5, x_target[:2].flatten(), A,b).flatten()
     x_intergoal=np.zeros(10)
     x_intergoal[:2]=inter_goal
-
     x_intergoal[2] = x_target[2]
+
     real_trajectory = {'x': [], 'y': [], 'z': []}
 
-
     i = 0
-    while np.linalg.norm(x_intergoal[:3]-x_target[:3])>0.1 and i < 50:
+    while np.linalg.norm(x_next[:3].flatten()-x_target[:3]) > 0.1:
         i += 1
         A_obs,b_obs=convexify(x_next[:2].flatten(),drone[2],obstacle_list)
         
-        u = mpc_control(quadrotor_linear, N, x_next, x_intergoal,A_obs,b_obs).reshape(-1,1)
+        u = mpc_control(quadrotor_linear, N, x_next, x_intergoal,A_obs,b_obs)
+
+        if u is None:
+            print("no solution")
+            break
+        else:
+            u = u.reshape(-1,1)
 
         real_trajectory['x'].append(x_next[0])
         real_trajectory['y'].append(x_next[1])
         real_trajectory['z'].append(x_next[2])
 
-        x_next = quadrotor_linear.next_x(x_next, u)
-        # quadrotor.step(u)
-        # x_next = quadrotor_linear.from_nonlinear(quadrotor)
-        print(u.flatten())
+        quadrotor.step(u)
+        # print(u)
+        print((quadrotor_linear.next_x(x_next, u)).flatten())
+        x_next = quadrotor_linear.from_nonlinear(quadrotor)
+        print(x_next.flatten())
+        print("\n")
+
         A,b=convexify(x_next[:2].flatten(),drone[2],obstacle_list)
         inter_goal=get_intermediate_goal(x_next[:2].flatten(), drone[2],x_target[:2].flatten(), A,b).flatten()
         x_intergoal=np.zeros(10)

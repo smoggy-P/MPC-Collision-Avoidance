@@ -19,18 +19,24 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,A_obs,b_obs):
     
 
     # For each stage in the MPC horizon
-    Q = np.identity(10)
+    Q = np.diag([1,1,1,1,1,1,1,1,1,1])
     for n in range(N):
         cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n], weight_input))
         constraints += [x[:,n+1] == quadrotor_linear.A @ x[:,n] + quadrotor_linear.B @ u[:,n]]
-        # constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
+        constraints += [x[6,n+1] <= 0.09]
+        constraints += [x[7,n+1] <= 0.09]
+        constraints += [x[6,n+1] >= -0.09]
+        constraints += [x[7,n+1] >= -0.09]
+        constraints += [u[:,n] >= -0.07]
+        constraints += [u[:,n] <= 0.07]
+        constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
     # Implement the cost components and/or constraints that need to be added once, here
     constraints += [x[:,0] == x_init.flatten()]
+    
     
     # Solves the problem
     problem = cp.Problem(cp.Minimize(cost), constraints)
     problem.solve(solver=cp.OSQP)
-
     # We return the MPC input
     return u[:, 0].value
 
