@@ -1,7 +1,6 @@
 import cvxpy as cp
 import numpy as np
 from numpy import newaxis
-from convexification import obstacle_list, convexify
 import control
 
 def mpc_control(quadrotor, N, x_init, x_target,A_obs,b_obs):
@@ -63,10 +62,10 @@ def mpc_control_stable(quadrotor, N, x_init, x_target,A_obs,b_obs,c=1):
     constraints += [x[:,0] == x_init.flatten()]
     
     for j in range(len(eig_val)):
-        print("*************")
+        #print("*************")
         #print(np.shape(eig_vec[j]))
         #print((x[:,N]-x_target)  @ eig_vec[j])
-        constraints+= [(x[:,N]-x_target)  @ eig_vec[j]<=eig_val[j]/c]
+        constraints+= [(x[:,N]-x_target)  @ eig_vec[j]<=eig_val[j]*c]
     #constraints += [cp.quad_form((x[:,N]-x_target),P) <= c]
     
     # Solves the problem

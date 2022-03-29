@@ -114,7 +114,7 @@ class Quadrotor():
                                [ 0,  L,  0, -L],
                                [-L,  0,  L,  0],
                                [ k, -k,  k, -k]])
-        self.inv_inertia = inv(self.inertia)
+        self.inv_inertia = np.linalg.inv(self.inertia)
         self.weight = np.array([0, 0, -self.mass*self.g])
         self.t_step = 0.1
     def reset(self, position=[0, 0, 0], yaw =0, pitch=0, roll=0):

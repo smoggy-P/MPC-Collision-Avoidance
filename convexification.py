@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cvxpy as cp
 
-
 p=np.array([-.5,-2])
 r_drone=0.5
 

@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
 from numpy import size
-from convexification import obstacle_list
 
 def data_for_cylinder_along_z(center_x,center_y,radius,height_z):
     z = np.linspace(0, height_z, 2)
@@ -16,9 +15,9 @@ def data_for_cylinder_along_z(center_x,center_y,radius,height_z):
 def visualization(real_trajectory, obstacle_list):
     fig = plt.figure()
     ax1 = p3.Axes3D(fig) # 3D place for drawing
-    real_trajectory['x'] = np.array(real_trajectory['x'],dtype=object)
-    real_trajectory['y'] = np.array(real_trajectory['y'],dtype=object)
-    real_trajectory['z'] = np.array(real_trajectory['z'],dtype=object)
+    real_trajectory['x'] = np.array(real_trajectory['x'])
+    real_trajectory['y'] = np.array(real_trajectory['y'])
+    real_trajectory['z'] = np.array(real_trajectory['z'])
     point, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], 'ro', ms=25, label='Quadrotor')
     line, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], label='Real_Trajectory')
 
