@@ -1,6 +1,9 @@
+from cmath import cos, sin
 import numpy as np
 import scipy.integrate
+import math
 from scipy.spatial.transform import Rotation
+from numpy.linalg import inv
 
 class Quadrotor_linear():
     def __init__(self):
@@ -13,12 +16,7 @@ class Quadrotor_linear():
         self.Iyy             = 1.43e-5  # kg*m^2
         self.Izz             = 2.89e-5  # kg*m^2
         self.arm_length      = 0.046  # meters
-        self.k_thrust        = 2.3e-08  # N/(rad/s)**2
-        self.k_drag          = 7.8e-11   # Nm/(rad/s)**2
-        self.inertia = np.diag(np.array([self.Ixx, self.Iyy, self.Izz])) # kg*m^2
         g = 9.81 # m/s^2
-
-        k = self.k_drag/self.k_thrust
         L = self.arm_length
         self.to_TM = np.array([[1,  1,  1,  1],
                                [ 0,  L,  0, -L],
@@ -35,8 +33,8 @@ class Quadrotor_linear():
         self.A_c = np.array([[0, 0, 0, 1, 0, 0, 0,  0,    0,      0        ],    #dx
                              [0, 0, 0, 0, 1, 0, 0,  0,    0,      0        ],    #dy
                              [0, 0, 0, 0, 0, 1, 0,  0,    0,      0        ],    #dz
-                             [0, 0, 0, 0, 0, 0, 0,  -g,   0,      0        ],    #ddx
-                             [0, 0, 0, 0, 0, 0, g,  0,    0,      0        ],    #ddy
+                             [0, 0, 0, 0, 0, 0, 0,  g,    0,      0        ],    #ddx
+                             [0, 0, 0, 0, 0, 0, -g, 0,    0,      0        ],    #ddy
                              [0, 0, 0, 0, 0, 0, 0,  0,    0,      0        ],    #ddz
                              [0, 0, 0, 0, 0, 0, 0,  0,    1,      0        ],    #phi_dot
                              [0, 0, 0, 0, 0, 0, 0,  0,    0,      1        ],    #theta_dot
@@ -53,7 +51,9 @@ class Quadrotor_linear():
                              [0, 1/self.Ixx, 0],  #phi_ddot
                              [0, 0, 1/self.Iyy]  #theta_ddot
                              ]) @ self.to_TM
-        self.C_c = np.array([1, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+        self.C_c = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                             [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
         self.D_c = np.zeros((1,4))
 
         # Discretization state space
@@ -62,31 +62,15 @@ class Quadrotor_linear():
         self.C = self.C_c
         self.D = self.D_c
 
-
     def next_x(self, x, u):
         return self.A.dot(x).reshape(-1,1) + self.B.dot(u)
-
-
-
-def quat_dot(quat, omega):
-    """
-    Parameters:
-        quat, [i,j,k,w]
-        omega, angular velocity of body in body axes
-    Returns
-        quat_dot, [i,j,k,w]
-    """
-    # Adapted from "Quaternions And Dynamics" by Basile Graf.
-    (q0, q1, q2, q3) = (quat[0], quat[1], quat[2], quat[3])
-    G = np.array([[ q3,  q2, -q1, -q0],
-                  [-q2,  q3,  q0, -q1],
-                  [ q1, -q0,  q3, -q2]])
-    quat_dot = 0.5 * G.T @ omega
-    # Augment to maintain unit quaternion.
-    quat_err = np.sum(quat**2) - 1
-    quat_err_grad = 2 * quat
-    quat_dot = quat_dot - quat_err * quat_err_grad
-    return quat_dot
+    def disturbed_output(self,x,real_d, sigma_noise):
+        return self.C @ x + real_d + np.random.normal() 
+    def from_nonlinear(self, quadrotor):
+        linearized_state = np.zeros(10).reshape(-1,1)
+        linearized_state[:8] = quadrotor.state[:8].reshape(-1,1)
+        linearized_state[8:] = quadrotor.state[9:11].reshape(-1,1)
+        return linearized_state
 
 class Quadrotor():
     """
@@ -100,11 +84,10 @@ class Quadrotor():
         self.arm_length      = 0.046  # meters
 
         #TODO: change force limit
-        self.cmd_rotor_forces_min = 0  # rad/s
-        self.cmd_rotor_forces_max = 2500  # rad/s
+        self.cmd_rotor_forces_min = -0.7  # N
+        self.cmd_rotor_forces_max = 0.7  # N
         self.k_thrust        = 2.3e-08  # N/(rad/s)**2
         self.k_drag          = 7.8e-11   # Nm/(rad/s)**2
-        # Additional constants.
         self.inertia = np.diag(np.array([self.Ixx, self.Iyy, self.Izz])) # kg*m^2
         self.g = 9.81 # m/s^2
         # Precomputes
@@ -115,27 +98,29 @@ class Quadrotor():
                                [-L,  0,  L,  0],
                                [ k, -k,  k, -k]])
         self.inv_inertia = np.linalg.inv(self.inertia)
-        self.weight = np.array([0, 0, -self.mass*self.g])
-        self.t_step = 0.1
+        #self.weight = np.array([0, 0, -self.mass*self.g])
+        self.weight = np.array([0, 0, 0])
+        self.t_step = 0.05
+        # self.inv_inertia = inv(self.inertia)
+        # self.weight = np.array([0, 0, 0])
+        # self.t_step = 0.05
     def reset(self, position=[0, 0, 0], yaw =0, pitch=0, roll=0):
         '''
-        state is a 13 dimensional vector
-            postion*3 velocity*3 attitude(quaternion)*4 angular velocity*3
-        state = [x y z dx dy dz qw qx qy qz r p q]
+        state is a 12 dimensional vector
+            postion*3 velocity*3 attitude(rpy)*3 angular velocity*3
+        state = [x y z dx dy dz psi theta phi p q r]
         dot_state = [dx dy dz ddx ddy ddz dqw dqx dqy dqz dr dp dq]
         '''
-        s = np.zeros(13)
+        s = np.zeros(12)
         s[0] = position[0]
         s[1] = position[1]
         s[2] = position[2]
-        r = Rotation.from_euler('zxy', [yaw, roll, pitch], degrees=True)
-        quat = r.as_quat()
-        s[6] = quat[0]
-        s[7] = quat[1]
-        s[8] = quat[2]
-        s[9] = quat[3]
-        self.state = self._unpack_state(s)
+        s[6] = pitch
+        s[7] = roll
+        s[8] = yaw
+        self.state = s
         return self.state
+
     def step(self, cmd_rotor_forces):
         '''
         Considering the max and min of rotor forces
@@ -143,59 +128,41 @@ class Quadrotor():
         action = [F1, F2, F3, F4]
         '''
         rotor_thrusts = np.clip(cmd_rotor_forces, self.cmd_rotor_forces_min, self.cmd_rotor_forces_max)
-        TM = self.to_TM @ rotor_thrusts
+        TM = self.to_TM @ cmd_rotor_forces
         T = TM[0]
-        M = TM[1:4]
+        M = TM[1:4].flatten()
         # Form autonomous ODE for constant inputs and integrate one time step.
         def s_dot_fn(t, s):
             return self._s_dot_fn(t, s, T, M)
         '''
         The next state can be obtained through integration （Runge-Kutta）
         '''
-        s = Quadrotor._pack_state(self.state)
+        s = self.state
         sol = scipy.integrate.solve_ivp(s_dot_fn, (0, self.t_step), s, first_step=self.t_step)
-        s = sol['y'][:,-1]
-        # turn state back to dict
-        self.state = Quadrotor._unpack_state(s)
-        # Re-normalize unit quaternion.
-        reward = 0
-        done = 0
-        info = {}
-        return self.state, reward, done, info
+        self.state = sol['y'][:,-1]
+        return self.state
+
     def _s_dot_fn(self, t, s, u1, u2):
         """
         Compute derivative of state for quadrotor given fixed control inputs as
         an autonomous ODE.
         """
-        state = Quadrotor._unpack_state(s)
-        # page 73
-        # Position derivative.
-        x_dot = state['v']
-        # Velocity derivative.
-        F = u1 * Quadrotor.rotate_k(state['q'])
-        v_dot = (self.weight + F) / self.mass
-        # Orientation derivative.
-        q_dot = quat_dot(state['q'], state['w'])
-        # Angular velocity derivative. page 26 Equation 4
-        omega = state['w']
-        omega_hat = Quadrotor.hat_map(omega)
-        w_dot = self.inv_inertia @ (u2 - omega_hat @ (self.inertia @ omega))
+        state = self.state
+        x_dot = state[3:6]
+        v_dot = np.array([u1[0]/self.mass * (cos(state[8]) * sin(state[7]) + cos(state[7]) * sin(state[6]) * sin(state[8])), 
+                          u1[0]/self.mass * (sin(state[8]) * sin(state[7]) - cos(state[8]) * cos(state[7]) * sin(state[6])), 
+                          u1[0]/self.mass * (cos(state[6]) * cos(state[7]))])
+        q_dot = state[9:]
+        q_dot_hat = Quadrotor.hat_map(q_dot)
+        w_dot = self.inv_inertia @ (u2 - q_dot_hat @ (self.inertia @ q_dot))
+
         # Pack into vector of derivatives.
-        s_dot = np.zeros((13,))
+        s_dot = np.zeros((12,))
         s_dot[0:3] = x_dot
         s_dot[3:6] = v_dot
-        s_dot[6:10] = q_dot
-        s_dot[10:13] = w_dot
+        s_dot[6:9] = q_dot
+        s_dot[9:] = w_dot
         return s_dot
-    @classmethod
-    def rotate_k(cls, q):
-        """
-        Rotate the unit vector k by quaternion q. This is the third column of
-        the rotation matrix associated with a rotation by q.
-        """
-        return np.array([2 * (q[0] * q[2] + q[1] * q[3]),
-                         2 * (q[1] * q[2] - q[0] * q[3]),
-                         1 - 2 * (q[0] ** 2 + q[1] ** 2)])
     @classmethod
     def hat_map(cls, s):
         """
@@ -204,21 +171,3 @@ class Quadrotor():
         return np.array([[0, -s[2], s[1]],
                          [s[2], 0, -s[0]],
                          [-s[1], s[0], 0]])
-    @classmethod
-    def _pack_state(cls, state):
-        """
-        Convert a state dict to Quadrotor's private internal vector representation.
-        """
-        s = np.zeros((13,))
-        s[0:3] = state['x']
-        s[3:6] = state['v']
-        s[6:10] = state['q']
-        s[10:13] = state['w']
-        return s
-    @classmethod
-    def _unpack_state(cls, s):
-        """
-        Convert Quadrotor's private internal vector representation to a state dict.
-        """
-        state = {'x': s[0:3], 'v': s[3:6], 'q': s[6:10], 'w': s[10:13]}
-        return state

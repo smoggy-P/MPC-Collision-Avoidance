@@ -2,3 +2,5 @@ __pycache__/*
 __pycache__
 __pycache__/Quadrotor.cpython-36.pyc
 __pycache__/visualization.cpython-36.pyc
+__pycache__/MPC_controller.cpython-36.pyc
+__pycache__/*.pyc
