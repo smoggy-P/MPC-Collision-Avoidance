@@ -67,8 +67,21 @@ C_tilde=np.concatenate((quadrotor_linear.C,Cd), axis=1)
 A_tilde=np.concatenate((np.concatenate((quadrotor_linear.A,Bd), axis=1),
                         np.concatenate((np.zeros((nb_disturbances,10)),np.eye(nb_disturbances)), axis=1)),axis=0)
 
+# Find the eigenvalue from the characteristic polynomial
+zo = 0.7        # damping ratio for the observer
+wo = 1
 
+# Define the eigen value we need for observers
+eigs = np.roots([1, 2*zo*wo, wo**2])
+eigs = np.append(eigs, np.roots([1, 2*zo*1.2, 1.2**2]))
+eigs = np.append(eigs, np.roots([1, 2*1.2*2, 2**2]))
+eigs = np.append(eigs, np.roots([1, 2*zo*3, 3**2]))
+eigs = np.append(eigs, np.roots([1, 2*zo*4, 4**2]))
+eigs = np.append(eigs, [-20, -60])
+
+
+# Calculate estimator gain
+L = control.acker(A_tilde.T, C_tilde.T, eigs).T
+print("L=",L)
 eig_val,eig_vec=np.linalg.eig(A_tilde-L@C_tilde)
-
 print("eigen values of A-LC : ", eig_val)
-
