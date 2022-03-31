@@ -31,16 +31,16 @@ Cd= np.array([[1, 0],
               [0, 0]])
 Bd= np.array([[1, 0],
               [0, 1],
-              [0, 0],
-              [0, 0],
-              [0, 0],
               [0, 1],
-              [0, 0],
-              [0, 0],
-              [1, 0],
-              [0, 0]])
+              [0, 1],
+              [0, 1],
+              [0, 1],
+              [0, 1],
+              [0, 1],
+              [0, 1],
+              [0, 1]])
 M=np.concatenate((np.concatenate((np.eye(10)-quadrotor_linear.A,-Bd), axis=1),
-np.concatenate((quadrotor_linear.C,Cd), axis=1)),axis=0)
+                  np.concatenate((quadrotor_linear.C,Cd), axis=1)),axis=0)
 
 
 print("aug sys matrix rank = ",np.linalg.matrix_rank(M))
@@ -56,3 +56,19 @@ print("aug sys matrix rank = ",np.linalg.matrix_rank(M))
 #        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  1.   ,   0.   ,  0.1  ],
 #        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,   1.   ,  0.   ],
 #        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,   0.   ,  1.   ]])
+nb_disturbances=len(Cd[0])
+nb_output=len(Cd)
+L1=np.ones((10,nb_output))
+L2=np.ones((nb_disturbances,nb_output))
+L=np.concatenate((L1,L2), axis=0)
+
+C_tilde=np.concatenate((quadrotor_linear.C,Cd), axis=1)
+
+A_tilde=np.concatenate((np.concatenate((quadrotor_linear.A,Bd), axis=1),
+                        np.concatenate((np.zeros((nb_disturbances,10)),np.eye(nb_disturbances)), axis=1)),axis=0)
+
+
+eig_val,eig_vec=np.linalg.eig(A_tilde-L@C_tilde)
+
+print("eigen values of A-LC : ", eig_val)
+
