@@ -35,6 +35,10 @@ Cd= np.array([[0, 0, 0 ],
               [0, 0, 0 ],
               [0, 0, 0 ],
               [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
               [0, 0, 0 ]])
 
 Bd= np.array([[0, 0, 0],
@@ -83,10 +87,8 @@ L2=np.array([[ 1.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
 L=np.concatenate((L1,L2), axis=0)
 
 C_tilde=np.concatenate((quadrotor_linear.C,Cd), axis=1)
-
-A_tilde=np.concatenate((np.concatenate((quadrotor_linear.A,Bd), axis=1),
-                        np.concatenate((np.zeros((nb_disturbances,10)),np.eye(nb_disturbances)), axis=1)),axis=0)
-print(np.linalg.matrix_rank(control.obsv(A_tilde, C_tilde)))
+A_tilde = np.block([[quadrotor_linear.A,               Bd                     ],
+                    [np.zeros((nb_disturbances,10)),  np.eye(nb_disturbances) ]])
 
 # Define the eigen value we need for observers
 eigs = np.array([-0.1, -0.2, -0.2, -0.2, -0.3, -0.3, -0.3, -0.4, -0.4, -0.4, -0.5, -0.5, -0.5])
