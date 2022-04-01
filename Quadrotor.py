@@ -62,8 +62,14 @@ class Quadrotor_linear():
 
     def next_x(self, x, u):
         return self.A.dot(x).reshape(-1,1) + self.B.dot(u)
-    def disturbed_output(self,x,real_d, sigma_noise):
-        return self.C @ x + real_d + np.random.normal() 
+    
+    def disturbed_next_x(self,x,u,real_d,Bd):
+        return self.A.dot(x).reshape(-1,1) + self.B.dot(u)+Bd @ real_d
+    
+    def disturbed_output(self,x,real_d, Cd, sigma_noise):
+        return self.C @ x + Cd @ real_d + np.random.normal(loc=np.zeros((1,10)),scale=sigma_noise).reshape(10,1)
+    
+    
     def from_nonlinear(self, quadrotor):
         linearized_state = np.zeros(10).reshape(-1,1)
         linearized_state[:8] = quadrotor.state[:8].reshape(-1,1)
