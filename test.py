@@ -17,7 +17,10 @@ A= np.eye(10) + A_c * 0.1
 
 C=np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]])
 
 O=control.obsv(A,C)
 
@@ -26,7 +29,14 @@ print("obs matrix rank = ",np.linalg.matrix_rank(O))
 ########
 quadrotor_linear = Quadrotor_linear()
 
-Cd= np.zeros((10,3))
+
+Cd= np.array([[0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ]])
+
 Bd= np.array([[0, 0, 0],
               [0, 0, 0],
               [0, 0, 0],
@@ -56,8 +66,20 @@ print("aug sys matrix rank = ",np.linalg.matrix_rank(M))
 #        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,   0.   ,  1.   ]])
 nb_disturbances=len(Cd[0])
 nb_output=len(Cd)
-L1=np.ones((10,nb_output))
-L2=np.ones((nb_disturbances,nb_output))
+L1=np.array([[ 1.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  1.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  1.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  1.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  1.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  1.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
+
+L2=np.array([[ 1.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  1.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  1.   ,  0.   ,  0.   ,  0.   ]])
 L=np.concatenate((L1,L2), axis=0)
 
 C_tilde=np.concatenate((quadrotor_linear.C,Cd), axis=1)
@@ -70,7 +92,6 @@ print(np.linalg.matrix_rank(control.obsv(A_tilde, C_tilde)))
 eigs = np.array([-0.1, -0.2, -0.2, -0.2, -0.3, -0.3, -0.3, -0.4, -0.4, -0.4, -0.5, -0.5, -0.5])
 print(eigs)
 
-print(np.linalg.matrix_rank(control.ctrb(A_tilde.T, C_tilde.T)), A_tilde.T.shape[0])
 # Calculate estimator gain
 L = control.place(A_tilde.T, C_tilde.T, eigs).T
 print("L=",L)
