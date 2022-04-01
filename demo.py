@@ -6,8 +6,7 @@ from Quadrotor import Quadrotor_linear, Quadrotor
 
 from MPC_controller import mpc_control,mpc_control_stable
 from visualization import data_for_cylinder_along_z
-from convexification import get_intermediate_goal
-from convexification import convexify
+from convexification import get_intermediate_goal, convexify
 
 drone = [0,0,0.2]  #pos_x,pos_y,radius
 
@@ -60,7 +59,6 @@ if __name__ == "__main__":
     i = 0
     while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i<300:
         i += 1
-        #print(i)
         A_obs,b_obs=convexify(x_next[:2].flatten(),drone[2],obstacle_list)
         
         u = mpc_control(quadrotor_linear, N, x_next, x_intergoal,A_obs,b_obs)
@@ -76,11 +74,11 @@ if __name__ == "__main__":
         real_trajectory['z'].append(x_next[2])
 
         #quadrotor.step(u)
-        # print(u)
+        print(u.flatten())
         x_next=quadrotor_linear.next_x(x_next, u).flatten()
         #x_next = quadrotor_linear.from_nonlinear(quadrotor)
         #print(x_next.flatten())
-        #print("\n")
+        print("\n")
 
         A,b=convexify(x_next[:2].flatten(),drone[2],obstacle_list)
         inter_goal=get_intermediate_goal(x_next[:2].flatten(), 0,x_target[:2].flatten(), A,b).flatten()
