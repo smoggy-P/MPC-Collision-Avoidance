@@ -21,7 +21,8 @@ obstacle_list=[obs1,obs2,obs3,obs4,obs5]#,obs1*2,obs2*2,obs3*2,obs4*2,obs5*2]
 goal = np.array([-3,-3,2]) #pos_x,pos_y,pos_z
 
 sensor_noise_sigma=np.array([0.1,0.1,0.1,0.01,0.01,0.01,0.001,0.001,0.001,0.001])
-real_disturbance=np.random.normal(loc=0,scale=1,size=3)
+real_disturbance=np.random.normal(loc=0,scale=0.1,size=3)
+print("real _dist", real_disturbance)
 
 Cd= np.array([[0, 0, 0 ],
               [0, 0, 0 ],
@@ -45,7 +46,7 @@ Bd= np.array([[0, 0, 0],
               [0, 0, 0],
               [0, 0, 0]])
 
-obs_eigen_values= np.array([-0.1, -0.2, -0.2, -0.2, -0.3, -0.3, -0.3, -0.4, -0.4, -0.4, -0.5, -0.5, -0.5])
+obs_eigen_values= np.array([0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4, 0.5, 0.5, 0.5])
 
 def animate(i):
     line.set_xdata(real_trajectory['x'][:i + 1])
@@ -86,18 +87,19 @@ if __name__ == "__main__":
     real_trajectory = {'x': [], 'y': [], 'z': []}
     est_trajectory = {'x': [], 'y': [], 'z': []}
     
-    print(x_intergoal)
+    #print(x_intergoal)
    
     x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A,b,Bd,Cd)
-    
-
+    #print(x_ref,u_ref)
+    #print(x_ref.shape,u_ref.shape)
     i = 0
     while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i<300:
         i += 1
         A_obs,b_obs=convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
         
-        u = mpc_control(quadrotor_linear, N, x_hat, x_ref,u_ref,A_obs,b_obs)
-
+        u = mpc_control(quadrotor_linear, N, x_hat, x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
+        
+        #print(u)
 
         if u is None:
             print("no solution")
@@ -121,14 +123,16 @@ if __name__ == "__main__":
         
         x_hat,d_hat=luenberger_observer(quadrotor_linear, x_hat,d_hat,output,u,Bd,Cd,L)
 
-        A,b=convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
+        A_obs,b_obs=convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
         #print(x_hat)
-        inter_goal=get_intermediate_goal(x_hat[:2].flatten(), 0,x_target[:2].flatten(), A,b).flatten()
+        inter_goal=get_intermediate_goal(x_hat[:2].flatten(), 0,x_target[:2].flatten(), A_obs,b_obs).flatten()
         x_intergoal=np.zeros(10)
         x_intergoal[:2]=inter_goal
         x_intergoal[2]=x_target[2]
         
         x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A_obs,b_obs,Bd,Cd)
+        print("d_hat:",d_hat)
+        #print("ref:",x_ref,u_ref)
         
     A,b = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
     print("***")

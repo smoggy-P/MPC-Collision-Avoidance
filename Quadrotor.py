@@ -64,7 +64,11 @@ class Quadrotor_linear():
         return self.A.dot(x).reshape(-1,1) + self.B.dot(u)
     
     def disturbed_next_x(self,x,u,real_d,Bd):
-        return self.A.dot(x).reshape(-1,1) + self.B.dot(u)+Bd @ real_d
+        #print("xxx")
+        #print(x.shape)
+        #print((self.A.dot(x).reshape(-1,1)).shape)
+        #print((Bd @ real_d).shape)
+        return self.A.dot(x).reshape(-1,1) + self.B.dot(u)+(Bd @ real_d).reshape(-1,1)
     
     def disturbed_output(self,x,real_d, Cd, sigma_noise):
         return self.C @ x + Cd @ real_d + np.random.normal(loc=np.zeros((1,10)),scale=sigma_noise).reshape(10,1)

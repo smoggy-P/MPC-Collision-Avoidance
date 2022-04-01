@@ -13,14 +13,17 @@ def OTS(quadrotor_linear,y_ref,d_hat, A_obs,b_obs,Bd,Cd):
     u_ref = cp.Variable((4, 1))
     
     #Cost : we minimize the input u_ref
+    #cost+=cp.sum_squares(x_ref-y_ref[:,np.newaxis])
     cost+=cp.sum_squares(u_ref)
     # Add constraints
     #M=np.concatenate((np.concatenate((np.eye(10)-quadrotor_linear.A,-quadrotor_linear.B), axis=1),
     #                  np.concatenate((quadrotor_linear.C,np.zeros((len(y_ref),4))), axis=1)),axis=0)
     
     #constraints+= [M @ np.concatenate((x_ref,u_ref),axis=0)== np.concatenate((Bd @ d_hat,y_ref-Cd @ d_hat),axis=0)]
+    #print(y_ref)
+    print("lol :",Bd @ d_hat)
     constraints += [(np.eye(10)-quadrotor_linear.A)@ x_ref - quadrotor_linear.B @ u_ref == Bd @ d_hat]
-    constraints += [quadrotor_linear.C @ x_ref == y_ref - Cd @ d_hat]
+    constraints += [quadrotor_linear.C @ x_ref == y_ref[:,np.newaxis] - Cd @ d_hat]
     # admissible x_ref and u_ref
     constraints += [A_obs[:,:] @ x_ref[:2] <= b_obs[:,np.newaxis]] 
     # constraints += [x_ref[6] <= 0.5]
