@@ -17,7 +17,10 @@ A= np.eye(10) + A_c * 0.1
 
 C=np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]])
 
 O=control.obsv(A,C)
 
@@ -26,19 +29,23 @@ print("obs matrix rank = ",np.linalg.matrix_rank(O))
 ########
 quadrotor_linear = Quadrotor_linear()
 
-Cd= np.array([[1, 0],
-              [0, 1],
-              [0, 0]])
-Bd= np.array([[1, 0],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1]])
+Cd= np.array([[0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ],
+              [0, 0, 0 ]])
+
+Bd= np.array([[1, 0, 0],
+              [0, 1, 0],
+              [0, 0, 1],
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0]])
 M=np.concatenate((np.concatenate((np.eye(10)-quadrotor_linear.A,-Bd), axis=1),
                   np.concatenate((quadrotor_linear.C,Cd), axis=1)),axis=0)
 
@@ -58,8 +65,20 @@ print("aug sys matrix rank = ",np.linalg.matrix_rank(M))
 #        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,   0.   ,  1.   ]])
 nb_disturbances=len(Cd[0])
 nb_output=len(Cd)
-L1=np.ones((10,nb_output))
-L2=np.ones((nb_disturbances,nb_output))
+L1=np.array([[ 1.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  1.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  1.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  1.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  1.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  1.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ]])
+
+L2=np.array([[ 1.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  1.   ,  0.   ,  0.   ,  0.   ,  0.   ],
+             [ 0.   ,  0.   ,  1.   ,  0.   ,  0.   ,  0.   ]])
 L=np.concatenate((L1,L2), axis=0)
 
 C_tilde=np.concatenate((quadrotor_linear.C,Cd), axis=1)
@@ -70,5 +89,5 @@ A_tilde=np.concatenate((np.concatenate((quadrotor_linear.A,Bd), axis=1),
 
 eig_val,eig_vec=np.linalg.eig(A_tilde-L@C_tilde)
 
-print("eigen values of A-LC : ", eig_val)
+print("eigen values modulus of A-LC : ", np.abs(eig_val))
 

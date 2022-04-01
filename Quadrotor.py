@@ -51,10 +51,14 @@ class Quadrotor_linear():
                              [0, 1/self.Ixx, 0],  #phi_ddot
                              [0, 0, 1/self.Iyy]  #theta_ddot
                              ]) @ self.to_TM
+        
         self.C_c = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                              [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                             [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
-        self.D_c = np.zeros((1,4))
+                             [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                             [0, 0, 0, 0, 0, 1, 0, 0, 0, 0]])
+        self.D_c = np.zeros((6,4))
 
         # Discretization state space
         self.A = np.eye(10) + self.A_c * self.t_step
