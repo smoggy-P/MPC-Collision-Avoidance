@@ -84,12 +84,13 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
     for n in range(N):
         cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n]-u_target, weight_input))
         constraints += [x[:,n+1] == quadrotor_linear.A @ x[:,n] + quadrotor_linear.B @ u[:,n]]
-        #constraints += [x[6,n+1] <= 0.5]
-        #constraints += [x[7,n+1] <= 0.5]
-        #constraints += [x[6,n+1] >= -0.5]
-        #constraints += [x[7,n+1] >= -0.5]
-        #constraints += [u[:,n] >= -20]
-        #constraints += [u[:,n] <= 20]
+
+        constraints += [x[6,n+1] <= 0.5]
+        constraints += [x[7,n+1] <= 0.5]
+        constraints += [x[6,n+1] >= -0.5]
+        constraints += [x[7,n+1] >= -0.5]
+        constraints += [u[:,n] >= -0.07]
+        constraints += [u[:,n] <= 0.07]
         constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
     # Implement the cost components and/or constraints that need to be added once, here
     constraints += [x[:,0] == x_init.flatten()]
