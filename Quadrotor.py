@@ -51,9 +51,7 @@ class Quadrotor_linear():
                              [0, 1/self.Ixx, 0],  #phi_ddot
                              [0, 0, 1/self.Iyy]  #theta_ddot
                              ]) @ self.to_TM
-        self.C_c = np.array([[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                             [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-                             [0, 0, 1, 0, 0, 0, 0, 0, 0, 0]])
+        self.C_c = np.identity(10)
         self.D_c = np.zeros((1,4))
 
         # Discretization state space

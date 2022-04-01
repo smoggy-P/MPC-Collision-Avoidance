@@ -26,19 +26,17 @@ print("obs matrix rank = ",np.linalg.matrix_rank(O))
 ########
 quadrotor_linear = Quadrotor_linear()
 
-Cd= np.array([[1, 0],
-              [0, 1],
-              [0, 0]])
-Bd= np.array([[1, 0],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1],
-              [0, 1]])
+Cd= np.zeros((10,3))
+Bd= np.array([[0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0],
+              [1, 0, 0],
+              [0, 1, 0],
+              [0, 0, 1],
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0],
+              [0, 0, 0]])
 M=np.concatenate((np.concatenate((np.eye(10)-quadrotor_linear.A,-Bd), axis=1),
                   np.concatenate((quadrotor_linear.C,Cd), axis=1)),axis=0)
 
@@ -66,22 +64,15 @@ C_tilde=np.concatenate((quadrotor_linear.C,Cd), axis=1)
 
 A_tilde=np.concatenate((np.concatenate((quadrotor_linear.A,Bd), axis=1),
                         np.concatenate((np.zeros((nb_disturbances,10)),np.eye(nb_disturbances)), axis=1)),axis=0)
-
-# Find the eigenvalue from the characteristic polynomial
-zo = 0.7        # damping ratio for the observer
-wo = 1
+print(np.linalg.matrix_rank(control.obsv(A_tilde, C_tilde)))
 
 # Define the eigen value we need for observers
-eigs = np.roots([1, 2*zo*wo, wo**2])
-eigs = np.append(eigs, np.roots([1, 2*zo*1.2, 1.2**2]))
-eigs = np.append(eigs, np.roots([1, 2*1.2*2, 2**2]))
-eigs = np.append(eigs, np.roots([1, 2*zo*3, 3**2]))
-eigs = np.append(eigs, np.roots([1, 2*zo*4, 4**2]))
-eigs = np.append(eigs, [-20, -60])
+eigs = np.array([-0.1, -0.2, -0.2, -0.2, -0.3, -0.3, -0.3, -0.4, -0.4, -0.4, -0.5, -0.5, -0.5])
+print(eigs)
 
-
+print(np.linalg.matrix_rank(control.ctrb(A_tilde.T, C_tilde.T)), A_tilde.T.shape[0])
 # Calculate estimator gain
-L = control.acker(A_tilde.T, C_tilde.T, eigs).T
+L = control.place(A_tilde.T, C_tilde.T, eigs).T
 print("L=",L)
 eig_val,eig_vec=np.linalg.eig(A_tilde-L@C_tilde)
 print("eigen values of A-LC : ", eig_val)
