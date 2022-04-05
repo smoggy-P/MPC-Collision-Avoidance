@@ -18,10 +18,11 @@ obs5=np.array([0.5,-2,1])#/2 #pos_x,pos_y,radius
 
 obstacle_list=[obs1,obs2,obs3,obs4,obs5]#,obs1*2,obs2*2,obs3*2,obs4*2,obs5*2]
 
-goal = np.array([-6,-6,0.]) #pos_x,pos_y,pos_z
+goal = np.array([-6,-6,2]) #pos_x,pos_y,pos_z
 
 sensor_noise_sigma=np.array([0.1,0.1,0.1,0.01,0.01,0.01,0.001,0.001,0.001,0.001])
-real_disturbance=np.random.normal(loc=0,scale=0.1,size=3)*0.1
+sensor_noise_sigma = np.zeros(10)
+real_disturbance=np.random.normal(loc=0,scale=0.001,size=3)
 print("real _dist", real_disturbance)
 
 Cd= np.array([[0, 0, 0 ],
@@ -46,7 +47,12 @@ Bd= np.array([[0, 0, 0],
               [0, 0, 0],
               [0, 0, 0]])
 
-obs_eigen_values= np.array([0.1, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4, 0.5, 0.5, 0.5])
+# Find the eigenvalue from the characteristic polynomial
+wo = 1          # bandwidth for the observer
+zo = 0.7        # damping ratio for the observer
+eigs = np.roots([1, 2*zo*wo, wo**2])
+
+obs_eigen_values= -np.array([0.2, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4, 0.5, 0.5, 0.5])
 
 def animate(i):
     line.set_xdata(real_trajectory['x'][:i + 1])
@@ -90,20 +96,17 @@ if __name__ == "__main__":
 
     real_trajectory = {'x': [], 'y': [], 'z': []}
     est_trajectory = {'x': [], 'y': [], 'z': []}
-    
-    #print(x_intergoal)
-   
-    x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A,b,Bd,Cd)
-    #print(x_ref,u_ref)
-    #print(x_ref.shape,u_ref.shape)
+
+    x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A, b, Bd, Cd)
+
     i = 0
-    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i<200:
+    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i < 200:
+        
         i += 1
+
         A_obs,b_obs=convexify(x_real[:2].flatten(),drone[2],obstacle_list)
         
         u = mpc_control(quadrotor_linear, N, x_real, x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
-        
-        #print(u)
 
         if u is None:
             print("no solution")
@@ -119,26 +122,24 @@ if __name__ == "__main__":
         real_trajectory['y'].append(x_real[1])
         real_trajectory['z'].append(x_real[2])
         
-        #print(x_real)
-        x_real=quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
+        x_real = quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
         
+        output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
         
-        ouput=quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
-        
-        x_hat,d_hat=luenberger_observer(quadrotor_linear, x_hat,d_hat,output,u,Bd,Cd,L)
+        x_hat, d_hat = luenberger_observer(quadrotor_linear, x_hat, d_hat, output, u, Bd, Cd, L)
 
-        A_obs,b_obs=convexify(x_real[:2].flatten(),drone[2],obstacle_list)
-        #print(x_hat)
-        inter_goal=get_intermediate_goal(x_hat[:2].flatten(), 0,x_target[:2].flatten(), A_obs,b_obs).flatten()
-        x_intergoal=np.zeros(10)
-        x_intergoal[:2]=inter_goal
-        x_intergoal[2]=x_target[2]
+        A_obs,b_obs = convexify(x_real[:2].flatten(),drone[2],obstacle_list)
+
+        x_intergoal[:2] = get_intermediate_goal(x_real[:2].flatten(), 0,x_target[:2].flatten(), A_obs,b_obs).flatten()
         
-        x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,real_disturbance[:,np.newaxis], A_obs,b_obs,Bd,Cd)
+        x_ref,u_ref = OTS(quadrotor_linear, x_intergoal, real_disturbance[:,np.newaxis], A_obs, b_obs, Bd, Cd)
+
         if x_ref is None :
-            x_ref=x_intergoal
-            u_ref=np.zeros((4,1))
-        print("x_ref:",x_ref)
+            x_ref = x_intergoal
+            u_ref = np.zeros((4,1))
+        print("d_error:",(d_hat.flatten()-real_disturbance).flatten())
+        print("x_error:",(x_hat-x_real).flatten())
+        print("\n")
         #print("ref:",x_ref,u_ref)
         
     A,b = convexify(x_real[:2].flatten(),drone[2],obstacle_list)
@@ -166,7 +167,7 @@ if __name__ == "__main__":
          
          x_real=quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
          
-         ouput=quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
+         output=quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
          
          x_hat,d_hat=luenberger_observer(quadrotor_linear, x_hat,d_hat,output,u,Bd,Cd,L)
          
@@ -176,16 +177,19 @@ if __name__ == "__main__":
              x_ref=x_intergoal
              u_ref=np.zeros((4,1))
         #print(x_hat[:3].flatten())
+    
+    
+    
     """ Visualisation """
     fig = plt.figure()
     ax1 = p3.Axes3D(fig) # 3D place for drawing
-    real_trajectory['x'] = np.array(real_trajectory['x'])
-    real_trajectory['y'] = np.array(real_trajectory['y'])
-    real_trajectory['z'] = np.array(real_trajectory['z'])
+    real_trajectory['x'] = np.array(real_trajectory['x'], dtype=float)
+    real_trajectory['y'] = np.array(real_trajectory['y'], dtype=float)
+    real_trajectory['z'] = np.array(real_trajectory['z'], dtype=float)
     
-    est_trajectory['x'] = np.array(est_trajectory['x'])
-    est_trajectory['y'] = np.array(est_trajectory['y'])
-    est_trajectory['z'] = np.array(est_trajectory['z'])
+    est_trajectory['x'] = np.array(est_trajectory['x'], dtype=float)
+    est_trajectory['y'] = np.array(est_trajectory['y'], dtype=float)
+    est_trajectory['z'] = np.array(est_trajectory['z'], dtype=float)
     point, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], 'ro', ms=2.5, label='Quadrotor')
     line, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], label='Real_Trajectory')
     line_est, = ax1.plot([est_trajectory['x'][0]], [est_trajectory['y'][0]], [est_trajectory['z'][0]], label='est_Trajectory')

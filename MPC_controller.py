@@ -51,22 +51,18 @@ def get_observer_gain(quadrotor_linear, Bd,Cd,eigen_values):
     
     return L
     
-def luenberger_observer(quadrotor_linear, x_hat,d_hat,y,u,Bd,Cd,L):
+def luenberger_observer(quadrotor_linear, x_hat, d_hat, y, u, Bd, Cd, L):
     nb_disturbances=len(Cd[0])
-    nb_output=len(Cd)
     nb_input=len(u)
     
-    C_tilde=np.concatenate((quadrotor_linear.C,Cd), axis=1)
-
-    A_tilde=np.concatenate((np.concatenate((quadrotor_linear.A,Bd), axis=1),
-                            np.concatenate((np.zeros((nb_disturbances,10)),np.eye(nb_disturbances)), axis=1)),axis=0)
-    new_state  = A_tilde @ np.concatenate((x_hat.reshape(-1,1),d_hat.reshape(-1,1)),axis=0)
-    new_state += np.concatenate((quadrotor_linear.B,np.zeros((nb_disturbances,nb_input))),axis=0) @ u
-    #print((new_state).shape)
-    #print((L@y[:,np.newaxis]-(L@(C_tilde @ np.concatenate((x_hat.reshape(-1,1),d_hat.reshape(-1,1)),axis=0)))).shape)
-    #print((L@(C_tilde @ np.concatenate((x_hat.reshape(-1,1),d_hat.reshape(-1,1)),axis=0))).shape)
-    new_state += L @ (y[:,np.newaxis]-C_tilde @ np.concatenate((x_hat.reshape(-1,1),d_hat.reshape(-1,1)),axis=0))
-    
+    C_tilde=np.block([quadrotor_linear.C, Cd])
+    A_tilde=np.block([[quadrotor_linear.A,              Bd                     ],
+                      [np.zeros((nb_disturbances,10)),  np.eye(nb_disturbances)]])
+    cur_state = np.block([[x_hat.reshape(-1,1)],
+                          [d_hat.reshape(-1,1)]])
+    new_state  = A_tilde @ cur_state + np.block([[quadrotor_linear.B                  ], 
+                                                 [np.zeros((nb_disturbances,nb_input))]]) @ u + L @ (y.reshape(-1,1) - C_tilde @ cur_state)
+    # print("est_cur_state:",(C_tilde @ cur_state).flatten())
     return new_state[:10],new_state[10:]
 
 
