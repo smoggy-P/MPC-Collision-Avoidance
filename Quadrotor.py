@@ -21,7 +21,7 @@ class Quadrotor_linear():
         self.to_TM = np.array([[1,  1,  1,  1],
                                [ 0,  L,  0, -L],
                                [-L,  0,  L,  0]])
-        self.t_step = 0.1
+        self.t_step = 0.05
 
         """
         Continuous state space without considering yawing(assuming yaw angle is 0 for all the time)
@@ -71,7 +71,7 @@ class Quadrotor_linear():
         return self.A.dot(x).reshape(-1,1) + self.B.dot(u)+(Bd @ real_d).reshape(-1,1)
     
     def disturbed_output(self,x,real_d, Cd, sigma_noise):
-        return self.C @ x + Cd @ real_d + np.random.normal(loc=np.zeros((1,10)),scale=sigma_noise).reshape(10,1)
+        return self.C @ x.reshape(-1,1) + Cd @ real_d.reshape(-1,1) + np.random.normal(loc=np.zeros((1,10)),scale=sigma_noise).reshape(10,1)
     
     
     def from_nonlinear(self, quadrotor):
@@ -109,9 +109,7 @@ class Quadrotor():
         #self.weight = np.array([0, 0, -self.mass*self.g])
         self.weight = np.array([0, 0, 0])
         self.t_step = 0.05
-        # self.inv_inertia = inv(self.inertia)
-        # self.weight = np.array([0, 0, 0])
-        # self.t_step = 0.05
+
     def reset(self, position=[0, 0, 0], yaw =0, pitch=0, roll=0):
         '''
         state is a 12 dimensional vector
