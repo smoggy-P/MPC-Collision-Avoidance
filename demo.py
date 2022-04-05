@@ -145,43 +145,42 @@ if __name__ == "__main__":
     A,b = convexify(x_real[:2].flatten(),drone[2],obstacle_list)
     print("***")
 
-    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.1 and i<400:
-         i+=1
-         
-         #♦print(i)
-         u = mpc_control_stable(quadrotor_linear, 10, x_real, x_ref.flatten(),u_ref.flatten(),A,b)
+    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.1:
 
-         if u is None:
-             print("no solution")
-             break
-         else:
-             u = u.reshape(-1,1)
+        u = mpc_control_stable(quadrotor_linear, 10, x_real, x_ref.flatten(),u_ref.flatten(),A,b)
 
-         est_trajectory['x'].append(x_hat[0])
-         est_trajectory['y'].append(x_hat[1])
-         est_trajectory['z'].append(x_hat[2])
-         
-         real_trajectory['x'].append(x_real[0])
-         real_trajectory['y'].append(x_real[1])
-         real_trajectory['z'].append(x_real[2])
-         
-         x_real=quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
-         
-         output=quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
-         
-         x_hat,d_hat=luenberger_observer(quadrotor_linear, x_hat,d_hat,output,u,Bd,Cd,L)
-         
-         x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A,b,Bd,Cd)
-         
-         if x_ref is None :
-             x_ref=x_intergoal
-             u_ref=np.zeros((4,1))
-        #print(x_hat[:3].flatten())
+        if u is None:
+            print("no solution")
+            break
+        else:
+            u = u.reshape(-1,1)
+
+        est_trajectory['x'].append(x_hat[0])
+        est_trajectory['y'].append(x_hat[1])
+        est_trajectory['z'].append(x_hat[2])
+        
+        real_trajectory['x'].append(x_real[0])
+        real_trajectory['y'].append(x_real[1])
+        real_trajectory['z'].append(x_real[2])
+        
+        x_real = quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
+        
+        output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
+        
+        x_hat,d_hat = luenberger_observer(quadrotor_linear, x_hat,d_hat,output,u,Bd,Cd,L)
+        
+        x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A,b,Bd,Cd)
+
+        print(x_hat.flatten())
+        
+        if x_ref is None :
+            x_ref = x_intergoal
+            u_ref = np.zeros((4,1))
     
     
     
     """ Visualisation """
-    fig = plt.figure()
+    fig = plt.figure(1)
     ax1 = p3.Axes3D(fig) # 3D place for drawing
     real_trajectory['x'] = np.array(real_trajectory['x'], dtype=float)
     real_trajectory['y'] = np.array(real_trajectory['y'], dtype=float)
@@ -218,3 +217,7 @@ if __name__ == "__main__":
                                 blit=False)
     plt.show()
     
+    time_range = np.arange(0, real_trajectory['x'].shape[0]*0.05-0.05, 0.05)
+    plt.figure(2)
+    plt.plot(time_range, real_trajectory['x'], time_range, est_trajectory['x'])
+    plt.show()
