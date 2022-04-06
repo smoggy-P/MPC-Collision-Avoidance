@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 import numpy as np
 from matplotlib import animation
-from Quadrotor import Quadrotor_linear, Quadrotor
+from Quadrotor import Quadrotor_linear
 
 from MPC_controller import mpc_control,mpc_control_stable,OTS,get_observer_gain,luenberger_observer
 from visualization import data_for_cylinder_along_z
@@ -21,21 +21,12 @@ obstacle_list=[obs1,obs2,obs3,obs4,obs5]#,obs6]#,obs1*2,obs2*2,obs3*2,obs4*2,obs
 
 goal = np.array([-6,-6,2]) #pos_x,pos_y,pos_z
 
-sensor_noise_sigma=np.array([0.1,0.1,0.1,0.01,0.01,0.01,0.001,0.001,0.001,0.001])
+sensor_noise_sigma=np.array([0.1,0.1,0.1,0.01,0.01,0.01,0.001,0.001,0.001,0.001])*0.001
 #sensor_noise_sigma = np.zeros(10)
 real_disturbance=np.random.normal(loc=0,scale=0.001,size=3)
 print("real _dist", real_disturbance)
 
-Cd= np.array([[0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ],
-              [0, 0, 0 ]])
+Cd= np.zeros((10,3))
 
 Bd= np.array([[0, 0, 0],
               [0, 0, 0],
@@ -48,10 +39,6 @@ Bd= np.array([[0, 0, 0],
               [0, 0, 0],
               [0, 0, 0]])
 
-# Find the eigenvalue from the characteristic polynomial
-wo = 1          # bandwidth for the observer
-zo = 0.7        # damping ratio for the observer
-eigs = np.roots([1, 2*zo*wo, wo**2])
 
 obs_eigen_values= -np.array([0.2, 0.2, 0.2, 0.2, 0.3, 0.3, 0.3, 0.4, 0.4, 0.4, 0.5, 0.5, 0.5])
 
@@ -69,7 +56,7 @@ def animate(i):
 
 if __name__ == "__main__":
     
-    N = 15
+    N = 5
 
     quadrotor_linear = Quadrotor_linear()
 
@@ -101,7 +88,7 @@ if __name__ == "__main__":
     x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A, b, Bd, Cd)
 
     i = 0
-    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i < 200:
+    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1:
         
         i += 1
 
@@ -138,8 +125,7 @@ if __name__ == "__main__":
         if x_ref is None :
             x_ref = x_intergoal
             u_ref = np.zeros((4,1))
-        print("d_error:",(d_hat.flatten()-real_disturbance).flatten())
-        print("x_error:",(x_hat-x_real).flatten())
+        print("x_error:",(x_real).flatten())
         print("\n")
         #print("ref:",x_ref,u_ref)
         
@@ -219,7 +205,7 @@ if __name__ == "__main__":
                                 blit=False)
     plt.show()
     
-    time_range = np.arange(0, real_trajectory['x'].shape[0]*0.05-0.05, 0.05)
+    time_range = np.arange(0, real_trajectory['x'].shape[0]*0.05-0.01, 0.05)
     plt.figure(2)
     plt.plot(time_range, real_trajectory['x'], time_range, est_trajectory['x'])
     plt.show()
