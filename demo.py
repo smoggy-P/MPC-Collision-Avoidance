@@ -93,8 +93,10 @@ if __name__ == "__main__":
         i += 1
 
         A_obs,b_obs=convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
+
+        output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma)
         
-        u = mpc_control(quadrotor_linear, N, x_real, x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
+        u = mpc_control(quadrotor_linear, N, output, x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
 
         if u is None:
             print("no solution")
@@ -112,13 +114,11 @@ if __name__ == "__main__":
         
         x_real = quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
         
-        output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
-        
         x_hat, d_hat = luenberger_observer(quadrotor_linear, x_hat, d_hat, output, u, Bd, Cd, L)
 
-        A_obs,b_obs = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
+        A_obs,b_obs = convexify(output[:2].flatten(),drone[2],obstacle_list)
 
-        x_intergoal[:2] = get_intermediate_goal(x_hat[:2].flatten(), 0,x_target[:2].flatten(), A_obs,b_obs).flatten()
+        x_intergoal[:2] = get_intermediate_goal(output[:2].flatten(), 0,x_target[:2].flatten(), A_obs,b_obs).flatten()
         
         x_ref,u_ref = OTS(quadrotor_linear, x_intergoal, d_hat, A_obs, b_obs, Bd, Cd)
 
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.1 and i<=500:
         i+=1
          
-        u = mpc_control_stable(quadrotor_linear, 30, x_real, x_ref.flatten(),u_ref.flatten(),A,b)
+        u = mpc_control_stable(quadrotor_linear, 30, output, x_ref.flatten(),u_ref.flatten(),A,b)
 
         if u is None:
             print("no solution")
