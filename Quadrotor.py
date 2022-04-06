@@ -11,17 +11,17 @@ class Quadrotor_linear():
         Define model parameters and state space for linear quadrotor dynamics
         """
 
-        self.mass            =  0.030  # kg
-        self.Ixx             = 1.43e-5  # kg*m^2
-        self.Iyy             = 1.43e-5  # kg*m^2
-        self.Izz             = 2.89e-5  # kg*m^2
+        self.mass            =  0.90  # kg
+        self.Ixx             = 30*1.43e-5  # kg*m^2
+        self.Iyy             = 30*1.43e-5  # kg*m^2
+        self.Izz             = 30*2.89e-5  # kg*m^2
         self.arm_length      = 0.046  # meters
         g = 9.81 # m/s^2
         L = self.arm_length
         self.to_TM = np.array([[1,  1,  1,  1],
                                [ 0,  L,  0, -L],
                                [-L,  0,  L,  0]])
-        self.t_step = 0.1
+        self.t_step = 0.05
 
         """
         Continuous state space without considering yawing(assuming yaw angle is 0 for all the time)

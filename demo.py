@@ -8,15 +8,16 @@ from MPC_controller import mpc_control,mpc_control_stable,OTS,get_observer_gain,
 from visualization import data_for_cylinder_along_z
 from convexification import get_intermediate_goal, convexify
 
+np.random.seed(seed=0)
 drone = [0,0,0.05]  #pos_x,pos_y,radius
 
-obs1=np.array([-3,1,1])/2   #pos_x,pos_y,radius
-obs2=np.array([-2,-3,1])/2  #pos_x,pos_y,radius
-obs3=np.array([0,2,1])/2 #pos_x,pos_y,radius
-obs4=np.array([-5,-1.9,1])/2 #pos_x,pos_y,radius
-obs5=np.array([0.5,-2,1])/2 #pos_x,pos_y,radius
-
-obstacle_list=[obs1,obs2,obs3,obs4,obs5]#,obs1*2,obs2*2,obs3*2,obs4*2,obs5*2]
+obs1=np.array([-3,1,1])   #pos_x,pos_y,radius
+obs2=np.array([-2,-3,1])  #pos_x,pos_y,radius
+obs3=np.array([0,2,1]) #pos_x,pos_y,radius
+obs4=np.array([-5,-1.9,1]) #pos_x,pos_y,radius
+obs5=np.array([0.5,-2,1]) #pos_x,pos_y,radius
+#obs6=np.array([-4,-4,1])/1.
+obstacle_list=[obs1,obs2,obs3,obs4,obs5]#,obs6]#,obs1*2,obs2*2,obs3*2,obs4*2,obs5*2]
 
 goal = np.array([-6,-6,2]) #pos_x,pos_y,pos_z
 
@@ -68,7 +69,7 @@ def animate(i):
 
 if __name__ == "__main__":
     
-    N = 10
+    N = 15
 
     quadrotor_linear = Quadrotor_linear()
 
@@ -106,7 +107,7 @@ if __name__ == "__main__":
 
         A_obs,b_obs=convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
         
-        u = mpc_control(quadrotor_linear, N, x_hat, x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
+        u = mpc_control(quadrotor_linear, N, x_real, x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
 
         if u is None:
             print("no solution")
@@ -145,10 +146,10 @@ if __name__ == "__main__":
     A,b = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
     print("***")
 
-    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.1 and i<=300:
+    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.1 and i<=500:
         i+=1
          
-        u = mpc_control_stable(quadrotor_linear, 10, x_hat, x_ref.flatten(),u_ref.flatten(),A,b)
+        u = mpc_control_stable(quadrotor_linear, 30, x_real, x_ref.flatten(),u_ref.flatten(),A,b)
 
         if u is None:
             print("no solution")
@@ -197,8 +198,8 @@ if __name__ == "__main__":
     ax1.set_xlabel('x')
     ax1.set_ylabel('y')
     ax1.set_zlabel('z')
-    ax1.set_xlim3d((-3, 3))
-    ax1.set_ylim3d((-3, 3))
+    ax1.set_xlim3d((-6, 6))
+    ax1.set_ylim3d((-6, 6))
     ax1.set_zlim3d((0, 3))
     ax1.set_title('3D animate')
     ax1.view_init(30, 35)

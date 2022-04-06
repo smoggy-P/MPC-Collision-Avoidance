@@ -31,8 +31,8 @@ def OTS(quadrotor_linear,y_ref,d_hat, A_obs,b_obs,Bd,Cd):
     constraints += [x_ref[7] <= 0.5]
     constraints += [x_ref[6] >= -0.5]
     constraints += [x_ref[7] >= -0.5]
-    constraints += [u_ref[:] >= -20]
-    constraints += [u_ref[:] <= 20]
+    constraints += [u_ref[:] >= -0.07*30]
+    constraints += [u_ref[:] <= 0.07*30]
     
     #constraints += [A_obs[:2,:] @ (quadrotor_linear.C @ x_ref + Cd @ d_hat)[:2] <= b_obs[:,np.newaxis]]
     
@@ -89,8 +89,8 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
         constraints += [x[7,n+1] <= 0.5]
         constraints += [x[6,n+1] >= -0.5]
         constraints += [x[7,n+1] >= -0.5]
-        constraints += [u[:,n] >= -0.07]
-        constraints += [u[:,n] <= 0.07]
+        constraints += [u[:,n] >= -0.07*30]
+        constraints += [u[:,n] <= 0.07*30]
         constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
     # Implement the cost components and/or constraints that need to be added once, here
     constraints += [x[:,0] == x_init.flatten()]
@@ -102,7 +102,7 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
     # We return the MPC input
     return u[:, 0].value
 
-def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=1):
+def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=0.009):
     weight_input = 0.02*np.eye(4)    # Weight on the input
     
     cost = 0.
@@ -130,8 +130,8 @@ def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=1)
         constraints += [x[7,n+1] <= 0.5]
         constraints += [x[6,n+1] >= -0.5]
         constraints += [x[7,n+1] >= -0.5]
-        constraints += [u[:,n] >= -0.07]
-        constraints += [u[:,n] <= 0.07]
+        constraints += [u[:,n] >= -0.07*30]
+        constraints += [u[:,n] <= 0.07*30]
     # Implement the cost components and/or constraints that need to be added once, here
     cost+=cp.quad_form((x[:,N]-x_target),P)
     constraints += [x[:,0] == x_init.flatten()]

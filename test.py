@@ -122,10 +122,10 @@ def get_terminal_set_corners(quadrotor_linear,goal,cst=0.0037):
                 corner_list.append(corner)
     return corner_list
     
-cst=0.0037
+cst=0.009
 
-input_ub=0.07
-input_lb=-0.07
+input_ub=0.07*30
+input_lb=-0.07*30
 Q = np.identity(10)
 R = 0.02*np.eye(4)
 
@@ -157,5 +157,5 @@ for a in range(2):
                                         print(np.dot(K,x)<=input_ub)
                                         #if np.any(K@x<input_lb):
                                         #    print(a,b,c,d,e,f,g,h,i,j)
-                                        print(np.dot(K,x)>=input_lb)
+                                        #print(np.dot(K,x))
                                         
