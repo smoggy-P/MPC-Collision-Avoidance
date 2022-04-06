@@ -126,6 +126,12 @@ def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=1)
         cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n]-u_target, weight_input))
         constraints += [x[:,n+1] == quadrotor.A @ x[:,n] + quadrotor.B @ u[:,n]]
         constraints += [A_obs @ x[:2,n] <= b_obs.flatten()]
+        constraints += [x[6,n+1] <= 0.5]
+        constraints += [x[7,n+1] <= 0.5]
+        constraints += [x[6,n+1] >= -0.5]
+        constraints += [x[7,n+1] >= -0.5]
+        constraints += [u[:,n] >= -0.07]
+        constraints += [u[:,n] <= 0.07]
     # Implement the cost components and/or constraints that need to be added once, here
     cost+=cp.quad_form((x[:,N]-x_target),P)
     constraints += [x[:,0] == x_init.flatten()]
