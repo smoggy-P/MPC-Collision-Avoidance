@@ -102,7 +102,7 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
     # We return the MPC input
     return u[:, 0].value
 
-def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=0.009):
+def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=0.01):
     weight_input = 0.02*np.eye(4)    # Weight on the input
     
     cost = 0.

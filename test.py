@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import control
 from Quadrotor import Quadrotor_linear
 
@@ -122,7 +123,7 @@ def get_terminal_set_corners(quadrotor_linear,goal,cst=0.0037):
                 corner_list.append(corner)
     return corner_list
     
-cst=0.009
+cst=0.01
 
 input_ub=0.07*30
 input_lb=-0.07*30
@@ -158,4 +159,27 @@ for a in range(2):
                                         #if np.any(K@x<input_lb):
                                         #    print(a,b,c,d,e,f,g,h,i,j)
                                         #print(np.dot(K,x))
-                                        
+#%%
+
+quadrotor_linear = Quadrotor_linear()
+
+u=np.array([0.1,0.1,-0.1,-0.1])
+
+x_init=np.zeros(10)
+list_pos=[x_init]
+for i in range(100):
+    if i <10:
+        new_x=quadrotor_linear.A @ list_pos[-1] 
+        list_pos.append(new_x)
+    else:
+        new_x=quadrotor_linear.A @ list_pos[-1] + quadrotor_linear.B @ u
+        list_pos.append(new_x)
+    
+list_pos=np.array(list_pos)
+
+plt.figure(1)
+plt.plot(list_pos[:,6:8])
+
+plt.figure(2)
+plt.plot(list_pos[:,3:6])
+                                      
