@@ -43,7 +43,7 @@ def convexify(p,r_drone,obstacle_list):
 def plot_convex_zone(p,r_drone,pos_goal,obstacle_list):
     A,b=convexify(p,r_drone,obstacle_list)
     #print(b)
-    intermediate_goal=get_intermediate_goal(p, r_drone,pos_goal, A,b)
+    intermediate_goal=get_intermediate_goal(p, 0,pos_goal, A,b)
     #print(intermediate_goal)
     fig, ax  = plt.subplots()
     
@@ -54,7 +54,7 @@ def plot_convex_zone(p,r_drone,pos_goal,obstacle_list):
     ax.add_patch(goal)
     ax.add_patch(inter_goal)
     x=np.array([-20,20])
-    new_b= get_new_constraints(p,r_drone, pos_goal, A,b)
+    new_b= get_new_constraints(p,0, pos_goal, A,b)
     for i in range(len(obstacle_list)):
         Ai=A[i,:]
         bi=b[i]
@@ -100,4 +100,4 @@ def get_intermediate_goal(pos,r_drone, goal_pos, A,b):
     return x.value
 
 
-# A,b=plot_convex_zone(p,r_drone,goal,obstacle_list)
+A,b=plot_convex_zone(p,r_drone,goal,obstacle_list)

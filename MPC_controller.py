@@ -80,7 +80,7 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
     
 
     # For each stage in the MPC horizon
-    Q = np.diag([1,1,1,1,1,1,1,1,1,1])
+    Q = np.diag([5,5,1,1,1,1,1,1,1,1])
     for n in range(N):
         cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n]-u_target, weight_input))
         constraints += [x[:,n+1] == quadrotor_linear.A @ x[:,n] + quadrotor_linear.B @ u[:,n]]
