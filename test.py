@@ -159,6 +159,9 @@ for a in range(2):
                                         #if np.any(K@x<input_lb):
                                         #    print(a,b,c,d,e,f,g,h,i,j)
                                         #print(np.dot(K,x))
+print(np.linalg.norm((eig_vec[0]/np.linalg.norm(eig_vec[0])*eig_val[0]*cst)[:3])
+      ,np.linalg.norm((eig_vec[1]/np.linalg.norm(eig_vec[1])*eig_val[1]*cst)[:3])
+      ,np.linalg.norm((eig_vec[3]/np.linalg.norm(eig_vec[3])*eig_val[3]*cst)[:3]))
 #%%
 
 quadrotor_linear = Quadrotor_linear()

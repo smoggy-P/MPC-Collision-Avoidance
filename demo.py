@@ -144,8 +144,10 @@ if __name__ == "__main__":
 
     while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.2 and i<=2000:
         i+=1
+        
+        output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma)
          
-        u = mpc_control_stable(quadrotor_linear, 30, output.flatten(), x_ref.flatten(),u_ref.flatten(),A,b)
+        u = mpc_control_stable(quadrotor_linear, 30, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A,b)
 
 
         if u is None:
@@ -168,9 +170,9 @@ if __name__ == "__main__":
         
         x_real = quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
         
-        output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
+        #output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
         
-        x_hat,d_hat = luenberger_observer(quadrotor_linear, x_hat,d_hat,output,u,Bd,Cd,L)
+        x_hat, d_hat = luenberger_observer(quadrotor_linear, x_hat, d_hat, output, u, Bd, Cd, L)
         d_hat_list.append(d_hat)
         x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A,b,Bd,Cd)
 
@@ -235,4 +237,5 @@ if __name__ == "__main__":
     plt.plot(np.array(real_trajectory['z']).reshape(-1,1))#,axis=1))
     plt.plot(np.array(est_trajectory['z']).reshape(-1,1))
     
+    plt.figure(4)
     plt.plot(np.array(d_hat_list).reshape(-1,3)-real_disturbance)
