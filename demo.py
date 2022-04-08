@@ -56,7 +56,7 @@ def animate(i):
 
 if __name__ == "__main__":
     
-    N = 5
+    N = 10
 
     quadrotor_linear = Quadrotor_linear()
 
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A, b, Bd, Cd)
 
     i = 0
-    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i < 1600:
+    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1:
         
         i += 1
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     A,b = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
     print("***")
 
-    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.2 and i<=2000:
+    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.3 and i<=2000:
         i+=1
         
         output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma)
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     ax1.legend(loc='lower right')
 
     for obstacle in obstacle_list:
-        Xc,Yc,Zc = data_for_cylinder_along_z(obstacle[0],obstacle[1],obstacle[2],5)
+        Xc,Yc,Zc = data_for_cylinder_along_z(obstacle[0],obstacle[1],obstacle[2],2)
         ax1.plot_surface(Xc, Yc, Zc, alpha=0.5)
 
     
@@ -222,13 +222,15 @@ if __name__ == "__main__":
                                 func=animate,
                                 frames=len(real_trajectory['x']),
                                 interval=5,
-                                repeat=True,
+                                repeat=False,
                                 blit=False)
     plt.show()
     
-    time_range = np.arange(0, real_trajectory['x'].shape[0]*0.05-0.01, 0.05)
+    d_hat_list = np.array(d_hat_list).reshape(-1,3)
+
+    time_range = np.arange(0, d_hat_list.shape[0]*0.1-0.01, 0.1)
     plt.figure(2)
-    plt.plot(time_range, real_trajectory['x'], time_range, est_trajectory['x'])
+    plt.plot(time_range, d_hat_list[:,0], time_range, real_disturbance[0]*np.ones(time_range.shape[0]))
     plt.show()
     
     plt.figure(3)
@@ -239,3 +241,4 @@ if __name__ == "__main__":
     
     plt.figure(4)
     plt.plot(np.array(d_hat_list).reshape(-1,3)-real_disturbance)
+    plt.show()
