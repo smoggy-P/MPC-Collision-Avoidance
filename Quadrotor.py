@@ -64,10 +64,6 @@ class Quadrotor_linear():
         return self.A.dot(x).reshape(-1,1) + self.B.dot(u)
     
     def disturbed_next_x(self,x,u,real_d,Bd):
-        #print("xxx")
-        #print(x.shape)
-        #print((self.A.dot(x).reshape(-1,1)).shape)
-        #print((Bd @ real_d).shape)
         return self.A @ x.reshape(-1,1) + self.B @ u.reshape(-1,1) + Bd @ real_d.reshape(-1,1)
     
     def disturbed_output(self,x,real_d, Cd, sigma_noise):
@@ -80,6 +76,7 @@ class Quadrotor_linear():
         linearized_state[8:] = quadrotor.state[9:11].reshape(-1,1)
         return linearized_state
 
+### Non linear quadrotor model. Wasnt used in the end ###
 class Quadrotor():
     """
     Quadrotor forward dynamics model.

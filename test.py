@@ -59,16 +59,6 @@ M=np.concatenate((np.concatenate((np.eye(10)-quadrotor_linear.A,-Bd), axis=1),
 print("aug sys matrix rank = ",np.linalg.matrix_rank(M))
 
 
-# array([[ 1.   ,  0.   ,  0.   ,  0.1  ,  0.   ,  0.   ,  0.   ,  0.   ,   0.   ,  0.   ],
-#        [ 0.   ,  1.   ,  0.   ,  0.   ,  0.1  ,  0.   ,  0.   ,  0.   ,   0.   ,  0.   ],
-#        [ 0.   ,  0.   ,  1.   ,  0.   ,  0.   ,  0.1  ,  0.   ,  0.   ,   0.   ,  0.   ],
-#        [ 0.   ,  0.   ,  0.   ,  1.   ,  0.   ,  0.   ,  0.   ,  0.981,   0.   ,  0.   ],
-#        [ 0.   ,  0.   ,  0.   ,  0.   ,  1.   ,  0.   , -0.981,  0.   ,   0.   ,  0.   ],
-#        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  1.   ,  0.   ,  0.   ,   0.   ,  0.   ],
-#        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  1.   ,  0.   ,   0.1  ,  0.   ],
-#        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  1.   ,   0.   ,  0.1  ],
-#        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,   1.   ,  0.   ],
-#        [ 0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ,   0.   ,  1.   ]])
 nb_disturbances=len(Cd[0])
 nb_output=len(Cd)
 L1=np.array([[ 1.   ,  0.   ,  0.   ,  0.   ,  0.   ,  0.   ],
@@ -159,6 +149,7 @@ for a in range(2):
                                         #if np.any(K@x<input_lb):
                                         #    print(a,b,c,d,e,f,g,h,i,j)
                                         #print(np.dot(K,x))
+print("If everything is True, then Kx in U for all x in the terminal set")
 print(np.linalg.norm((eig_vec[0]/np.linalg.norm(eig_vec[0])*eig_val[0]*cst)[:3])
       ,np.linalg.norm((eig_vec[1]/np.linalg.norm(eig_vec[1])*eig_val[1]*cst)[:3])
       ,np.linalg.norm((eig_vec[3]/np.linalg.norm(eig_vec[3])*eig_val[3]*cst)[:3]))

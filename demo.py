@@ -15,14 +15,12 @@ obs2=np.array([-2,-3,1])  #pos_x,pos_y,radius
 obs3=np.array([0,2,1]) #pos_x,pos_y,radius
 obs4=np.array([-5,-1.9,1]) #pos_x,pos_y,radius
 obs5=np.array([0.5,-2,1]) #pos_x,pos_y,radius
-#obs6=np.array([-4,-4,1])/1.
 obstacle_list=[obs1,obs2,obs3,obs4,obs5]#,obs6]#,obs1*2,obs2*2,obs3*2,obs4*2,obs5*2]
 
 goal = np.array([-5,-5,2]) #pos_x,pos_y,pos_z
 
 sensor_noise_sigma=np.array([0.05,0.05,0.05,0.001,0.001,0.001,0.001,0.001,0.001,0.001])
 
-#sensor_noise_sigma = np.zeros(10)
 real_disturbance=np.random.normal(loc=0,scale=0.01,size=3)
 print("real _dist", real_disturbance)
 
@@ -41,7 +39,7 @@ Bd= np.array([[0, 0, 0],
 
 
 obs_eigen_values= np.array([-0.1, -0.1, -0.1, -0.03, -0.03, -0.03, 0.3, 0.3, 0.6, 0.6, -0.05, -0.05, -0.05])
-#obs_eigen_values= np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -0.7, -0.7,-0.7])
+
 def animate(i):
     line.set_xdata(real_trajectory['x'][:i + 1])
     line.set_ydata(real_trajectory['y'][:i + 1])
@@ -59,7 +57,9 @@ if __name__ == "__main__":
     N = 10
 
     quadrotor_linear = Quadrotor_linear()
-
+    
+    # Some initialisation
+    
     x_init = np.zeros(10)
     x_init[0]=drone[0]
     x_init[1]=drone[1]
@@ -75,8 +75,10 @@ if __name__ == "__main__":
     output = x_init
     
     L=get_observer_gain(quadrotor_linear, Bd,Cd,obs_eigen_values)
-    A,b = convexify(x_init[:2].flatten(),drone[2],obstacle_list)
     
+    # Get convex workspace with constraints for obstacles
+    A,b = convexify(x_init[:2].flatten(),drone[2],obstacle_list)
+    #Get intermediate goal in this convex space
     inter_goal=get_intermediate_goal(x_init[:2].flatten(), 0, x_target[:2].flatten(), A,b).flatten()
     x_intergoal=np.zeros(10)
     x_intergoal[:2]=inter_goal
@@ -87,20 +89,25 @@ if __name__ == "__main__":
     output_trajectory = {'x': [], 'y': [], 'z': []}
     
     d_hat_list=[]
+    
+    # Optimal target selector
     x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A, b, Bd, Cd)
 
     i = 0
-    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1:
+    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i<500: #until intergoal and final goal are equal
         
-        i += 1
+        i += 1 #limit number of iterations
 
+        # Get obstacle matrix
         A_obs,b_obs=convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
 
         output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma)
         
+        #Compute the input with mpc
         u = mpc_control(quadrotor_linear, N, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
 
         if u is None:
+            # if failure from MPC, u=0, which means hover input
             print("no solution")
             u=np.zeros((4,1))
         else:
@@ -118,36 +125,38 @@ if __name__ == "__main__":
         output_trajectory['y'].append(output[1])
         output_trajectory['z'].append(output[2])
         
+        # Plant
         x_real = quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
-        
+        #Observer
         x_hat, d_hat = luenberger_observer(quadrotor_linear, x_hat, d_hat, output, u, Bd, Cd, L)
         
         d_hat_list.append(d_hat)
         
+        #Recompute obstacles and intermediate goal
         A_obs,b_obs = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
 
         x_intergoal[:2] = get_intermediate_goal(output[:2].flatten(), 0,x_target[:2].flatten(), A_obs,b_obs).flatten()
         
         x_ref,u_ref = OTS(quadrotor_linear, x_intergoal, d_hat, A_obs, b_obs, Bd, Cd)
 
-        if x_ref is None :
+        if x_ref is None : #if failure from target selector
             x_ref = x_intergoal
             u_ref = np.zeros((4,1))
-        #print("x_error:",(x_real).flatten())
+        
         print(i)
         print("x_real :",x_real)
-        #print("\n")
-        #print("ref:",x_ref,u_ref)
         
+    #intermediate goal = final goal, so we pass on stable MPC with time invariant constraints  
     A,b = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
     print("***")
 
-    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.3 and i<=2000:
+    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.3 and i<=1000: #until reach final goal
         i+=1
         
         output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma)
-         
-        u = mpc_control_stable(quadrotor_linear, 30, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A,b)
+        
+        # Use the mpc with terminal cost and set
+        u = mpc_control_stable(quadrotor_linear, 3*N, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A,b)
 
 
         if u is None:
@@ -168,17 +177,20 @@ if __name__ == "__main__":
         output_trajectory['y'].append(output[1])
         output_trajectory['z'].append(output[2])
         
+        #Plant
+        
         x_real = quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
         
-        #output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma).flatten()
-        
+        #Observer
         x_hat, d_hat = luenberger_observer(quadrotor_linear, x_hat, d_hat, output, u, Bd, Cd, L)
         d_hat_list.append(d_hat)
+        #Optimal target selector
         x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A,b,Bd,Cd)
 
-        print(x_hat.flatten())
+        print(i)
+        print("x_real :",x_real)
         
-        if x_ref is None :
+        if x_ref is None :#if failure from target selector
             x_ref = x_intergoal
             u_ref = np.zeros((4,1))
     
@@ -205,8 +217,8 @@ if __name__ == "__main__":
     ax1.set_xlabel('x')
     ax1.set_ylabel('y')
     ax1.set_zlabel('z')
-    ax1.set_xlim3d((-6, 6))
-    ax1.set_ylim3d((-6, 6))
+    ax1.set_xlim3d((-7, 3))
+    ax1.set_ylim3d((-6, 4))
     ax1.set_zlim3d((0, 3))
     ax1.set_title('3D animate')
     ax1.view_init(30, 35)
@@ -226,19 +238,19 @@ if __name__ == "__main__":
                                 blit=False)
     plt.show()
     
-    d_hat_list = np.array(d_hat_list).reshape(-1,3)
+    ### Additional figures. Uncomment if wanted ###
+    
+    # d_hat_list = np.array(d_hat_list).reshape(-1,3)
 
-    time_range = np.arange(0, d_hat_list.shape[0]*0.1-0.01, 0.1)
-    plt.figure(2)
-    plt.plot(time_range, d_hat_list[:,0], time_range, real_disturbance[0]*np.ones(time_range.shape[0]))
-    plt.show()
+    # time_range = np.arange(0, d_hat_list.shape[0]*0.1-0.01, 0.1)
+    # plt.figure(2)
+    # plt.plot(time_range, d_hat_list[:,0], time_range, real_disturbance[0]*np.ones(time_range.shape[0]))
+    # plt.show()
     
-    plt.figure(3)
-    #plt.plot(np.square((np.array(real_trajectory['x'])-np.array(est_trajectory['x'])).reshape(-1,1)))#,axis=1))
+    # plt.figure(3)
+    # plt.plot(np.array(real_trajectory['z']).reshape(-1,1))#,axis=1))
+    # plt.plot(np.array(est_trajectory['z']).reshape(-1,1))
     
-    plt.plot(np.array(real_trajectory['z']).reshape(-1,1))#,axis=1))
-    plt.plot(np.array(est_trajectory['z']).reshape(-1,1))
-    
-    plt.figure(4)
-    plt.plot(np.array(d_hat_list).reshape(-1,3)-real_disturbance)
-    plt.show()
+    # plt.figure(4)
+    # plt.plot(np.array(d_hat_list).reshape(-1,3)-real_disturbance)
+    # plt.show()

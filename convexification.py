@@ -16,7 +16,6 @@ r_obs2=3
 
 obs3=[7,-1.9,2]
 obstacle_list=[obs1,obs2,obs3]
-#plt.plot(p)
 def get_coeff(p,r_drone,p_obs,r_obs):
     
     point=p_obs+(r_drone+r_obs)*(p-p_obs)/np.linalg.norm(p-p_obs)
@@ -42,9 +41,9 @@ def convexify(p,r_drone,obstacle_list):
 
 def plot_convex_zone(p,r_drone,pos_goal,obstacle_list):
     A,b=convexify(p,r_drone,obstacle_list)
-    #print(b)
+
     intermediate_goal=get_intermediate_goal(p, 0,pos_goal, A,b)
-    #print(intermediate_goal)
+
     fig, ax  = plt.subplots()
     
     drone    = plt.Circle(p, r_drone, color='r')
@@ -73,22 +72,18 @@ def plot_convex_zone(p,r_drone,pos_goal,obstacle_list):
 def get_new_constraints(pos,r_drone, goal_pos, A,b):
     new_b=[]
     for i in range(len(b)):
-        #new_b.append(np.min((v[1]+b[i]-A[0]*v[0],-v[1]+b[i]+A[0]*v[0])))
         new_b.append(b[i]-r_drone/(np.sin(np.arctan(1/np.abs(A[i,0])))))
 
-        #print(np.arctan(1/np.abs(A[i,0])))
     return np.array(new_b)
 def get_intermediate_goal(pos,r_drone, goal_pos, A,b):
-    #print(b)
     new_b=get_new_constraints(pos,r_drone, goal_pos, A,b)
-    #print(new_b)
-    #print(b-new_b)
+
 
     cost = 0.
     constraints = []
     
     # Create the optimization variables
-    x = cp.Variable((2, 1)) # cp.Variable((dim_1, dim_2))
+    x = cp.Variable((2, 1)) 
     # Add constraints
     constraints+=[A[:,:]@x<=new_b[:,np.newaxis]]
 
