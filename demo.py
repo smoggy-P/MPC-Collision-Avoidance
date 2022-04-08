@@ -10,7 +10,6 @@ from convexification import get_intermediate_goal, convexify
 
 np.random.seed(seed=0)
 drone = [0,0,0.05]  #pos_x,pos_y,radius
-small_noise_sigma=np.array([0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001,0.001])*10
 obs1=np.array([-3,1,1])   #pos_x,pos_y,radius
 obs2=np.array([-2,-3,1])  #pos_x,pos_y,radius
 obs3=np.array([0,2,1]) #pos_x,pos_y,radius
@@ -21,10 +20,10 @@ obstacle_list=[obs1,obs2,obs3,obs4,obs5]#,obs6]#,obs1*2,obs2*2,obs3*2,obs4*2,obs
 
 goal = np.array([-5,-5,2]) #pos_x,pos_y,pos_z
 
-sensor_noise_sigma=np.array([0.01,0.01,0.01,0.01,0.01,0.01,0.001,0.001,0.001,0.001])
+sensor_noise_sigma=np.array([0.05,0.05,0.05,0.001,0.001,0.001,0.001,0.001,0.001,0.001])
 
 #sensor_noise_sigma = np.zeros(10)
-real_disturbance=np.random.normal(loc=0,scale=0.001,size=3)
+real_disturbance=np.random.normal(loc=0,scale=0.01,size=3)
 print("real _dist", real_disturbance)
 
 Cd= np.zeros((10,3))
@@ -42,7 +41,7 @@ Bd= np.array([[0, 0, 0],
 
 
 obs_eigen_values= np.array([-0.1, -0.1, -0.1, -0.03, -0.03, -0.03, 0.3, 0.3, 0.6, 0.6, -0.05, -0.05, -0.05])
-
+#obs_eigen_values= np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -0.7, -0.7,-0.7])
 def animate(i):
     line.set_xdata(real_trajectory['x'][:i + 1])
     line.set_ydata(real_trajectory['y'][:i + 1])
@@ -91,7 +90,7 @@ if __name__ == "__main__":
     x_ref,u_ref = OTS(quadrotor_linear,x_intergoal,d_hat, A, b, Bd, Cd)
 
     i = 0
-    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i < 600:
+    while np.linalg.norm(x_intergoal[:3].flatten()-x_target[:3]) > 0.1 and i < 1600:
         
         i += 1
 
@@ -122,7 +121,9 @@ if __name__ == "__main__":
         x_real = quadrotor_linear.disturbed_next_x(x_real,u,real_disturbance,Bd)
         
         x_hat, d_hat = luenberger_observer(quadrotor_linear, x_hat, d_hat, output, u, Bd, Cd, L)
-
+        
+        d_hat_list.append(d_hat)
+        
         A_obs,b_obs = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
 
         x_intergoal[:2] = get_intermediate_goal(output[:2].flatten(), 0,x_target[:2].flatten(), A_obs,b_obs).flatten()
@@ -134,13 +135,14 @@ if __name__ == "__main__":
             u_ref = np.zeros((4,1))
         #print("x_error:",(x_real).flatten())
         print(i)
+        print("x_real :",x_real)
         #print("\n")
         #print("ref:",x_ref,u_ref)
         
     A,b = convexify(x_hat[:2].flatten(),drone[2],obstacle_list)
     print("***")
 
-    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.1 and i<=900:
+    while np.linalg.norm(x_real[:3].flatten() - x_target[:3]) >= 0.2 and i<=2000:
         i+=1
          
         u = mpc_control_stable(quadrotor_linear, 30, output.flatten(), x_ref.flatten(),u_ref.flatten(),A,b)
@@ -190,6 +192,10 @@ if __name__ == "__main__":
     est_trajectory['x'] = np.array(est_trajectory['x'], dtype=float)
     est_trajectory['y'] = np.array(est_trajectory['y'], dtype=float)
     est_trajectory['z'] = np.array(est_trajectory['z'], dtype=float)
+    
+    output_trajectory['x'] = np.array(output_trajectory['x'], dtype=float)
+    output_trajectory['y'] = np.array(output_trajectory['y'], dtype=float)
+    output_trajectory['z'] = np.array(output_trajectory['z'], dtype=float)
     point, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], 'ro', ms=2.5, label='Quadrotor')
     line, = ax1.plot([real_trajectory['x'][0]], [real_trajectory['y'][0]], [real_trajectory['z'][0]], label='Real_Trajectory')
     line_est, = ax1.plot([est_trajectory['x'][0]], [est_trajectory['y'][0]], [est_trajectory['z'][0]], label='est_Trajectory')
@@ -228,3 +234,5 @@ if __name__ == "__main__":
     
     plt.plot(np.array(real_trajectory['z']).reshape(-1,1))#,axis=1))
     plt.plot(np.array(est_trajectory['z']).reshape(-1,1))
+    
+    plt.plot(np.array(d_hat_list).reshape(-1,3)-real_disturbance)

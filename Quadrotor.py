@@ -21,7 +21,7 @@ class Quadrotor_linear():
         self.to_TM = np.array([[1,  1,  1,  1],
                                [ 0,  L,  0, -L],
                                [-L,  0,  L,  0]])
-        self.t_step = 0.04
+        self.t_step = 0.1
 
         """
         Continuous state space without considering yawing(assuming yaw angle is 0 for all the time)
