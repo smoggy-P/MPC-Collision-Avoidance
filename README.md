@@ -1,5 +1,13 @@
 # MPC-Collision-Avoidance
-In this repository we would present you with an implementation of MPC to solve collision avoidance problem for 3D drone.
+In this repository we would present you with an implementation of MPC to solve [Collision avoidance for 3D quadrotor](https://github.com/smoggy-P/MPC-Collision-Avoidance/files/8454986/MPC.pdf).
+## Dependency
+We used several packages in python, here is the list of their version:
+```ruby
+control: "~> 0.9.1"
+cvxpy: "~> 1.1.19"
+numpy: "~> 1.19.5"
+matplotlib: "~> 3.3.4"
+```
 ## Using the code
 Firstly clone this repository, then run a simple demo by:
 ```
@@ -7,4 +15,5 @@ git clone https://github.com/smoggy-P/MPC-Collision-Avoidance.git
 python3 demo.py
 ```
 You would see a visualization of generated trajectory.
-![Figure_1](https://user-images.githubusercontent.com/29809038/158035733-cc07499c-9847-425d-a2fc-b402c41ac652.png)
+![Peek 2022-04-08 22-10](https://user-images.githubusercontent.com/29809038/162519933-905882db-5b8b-42c6-953a-89bec1e893e0.gif)
+
