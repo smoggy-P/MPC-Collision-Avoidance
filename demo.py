@@ -229,15 +229,11 @@ if __name__ == "__main__":
         Xc,Yc,Zc = data_for_cylinder_along_z(obstacle[0],obstacle[1],obstacle[2],2)
         ax1.plot_surface(Xc, Yc, Zc, alpha=0.5)
 
-    points = get_terminal_set_corners(quadrotor_linear, x_target[:3], 0.01)
-    for point in points:
-        ax1.scatter3D(point[0], point[1], point[2])
-
     ani = animation.FuncAnimation(fig=fig,
                                 func=animate,
                                 frames=len(real_trajectory['x']),
                                 interval=5,
-                                repeat=False,
+                                repeat=True,
                                 blit=False)
     plt.show()
     
