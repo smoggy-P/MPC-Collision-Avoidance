@@ -7,6 +7,7 @@ from Quadrotor import Quadrotor_linear
 from MPC_controller import mpc_control,mpc_control_stable,OTS,get_observer_gain,luenberger_observer
 from visualization import data_for_cylinder_along_z
 from convexification import get_intermediate_goal, convexify
+from test import get_terminal_set_corners
 
 np.random.seed(seed=0)
 drone = [0,0,0.05]  #pos_x,pos_y,radius
@@ -104,7 +105,7 @@ if __name__ == "__main__":
         output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma)
         
         #Compute the input with mpc
-        u = mpc_control(quadrotor_linear, N, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A_obs,b_obs)
+        u = mpc_control(quadrotor_linear, N, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A_obs,b_obs,1)
 
         if u is None:
             # if failure from MPC, u=0, which means hover input
@@ -156,7 +157,7 @@ if __name__ == "__main__":
         output = quadrotor_linear.disturbed_output(x_real,real_disturbance, Cd, sensor_noise_sigma)
         
         # Use the mpc with terminal cost and set
-        u = mpc_control_stable(quadrotor_linear, 3*N, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A,b)
+        u = mpc_control_stable(quadrotor_linear, 3*N, x_hat.flatten(), x_ref.flatten(),u_ref.flatten(),A,b,0.01,1)
 
 
         if u is None:
@@ -228,7 +229,9 @@ if __name__ == "__main__":
         Xc,Yc,Zc = data_for_cylinder_along_z(obstacle[0],obstacle[1],obstacle[2],2)
         ax1.plot_surface(Xc, Yc, Zc, alpha=0.5)
 
-    
+    points = get_terminal_set_corners(quadrotor_linear, x_target[:3], 0.01)
+    for point in points:
+        ax1.scatter3D(point[0], point[1], point[2])
 
     ani = animation.FuncAnimation(fig=fig,
                                 func=animate,

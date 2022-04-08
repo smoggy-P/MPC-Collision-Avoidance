@@ -60,7 +60,7 @@ def luenberger_observer(quadrotor_linear, x_hat, d_hat, y, u, Bd, Cd, L):
     return new_state[:10],new_state[10:]
 
 
-def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
+def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs, xy_cost):
        # Weight on the input
     
     cost = 0.
@@ -74,7 +74,7 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
     
 
     # For each stage in the MPC horizon
-    Q = np.diag([1,1,1,1,1,1,1,1,1,1])
+    Q = np.diag([xy_cost,xy_cost,1,1,1,1,1,1,1,1])
     R = 0.02*np.eye(4) 
     for n in range(N):
         cost += (cp.quad_form((x[:,n+1]-x_target),Q)  + cp.quad_form(u[:,n]-u_target, R))
@@ -99,7 +99,7 @@ def mpc_control(quadrotor_linear, N, x_init, x_target,u_target, A_obs,b_obs):
     # We return the MPC input
     return u[:, 0].value
 
-def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=0.01):
+def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=0.01, xy_cost=1):
     
     cost = 0.
     constraints = []
@@ -110,7 +110,7 @@ def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=0.
 
 
     # For each stage in the MPC horizon
-    Q = np.identity(10)
+    Q = np.diag([xy_cost,xy_cost,1,1,1,1,1,1,1,1])
     R = 0.02*np.eye(4)
     
     #Solve DARE and get eigen values and vectors
