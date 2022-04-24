@@ -134,8 +134,8 @@ def mpc_control_stable(quadrotor, N, x_init, x_target,u_target, A_obs,b_obs,c=0.
     
     #Terminal set but with linear constraints (cvxpy doesnt accept quadratic constraints)
     for j in range(len(eig_val)):
-        constraints+= [(x[:,N]-x_target)  @ eig_vec[j]/np.linalg.norm(eig_vec[j])<=eig_val[j]*c]
-        constraints+= [(x[:,N]-x_target)  @ eig_vec[j]/np.linalg.norm(eig_vec[j])>=-eig_val[j]*c]
+        constraints+= [(x[:,N]-x_target)  @ eig_vec[j]/np.linalg.norm(eig_vec[j])<=np.sqrt(c/eig_val[j])]
+        constraints+= [(x[:,N]-x_target)  @ eig_vec[j]/np.linalg.norm(eig_vec[j])>=-np.sqrt(c/eig_val[j])]
     
     
     # Solves the problem
