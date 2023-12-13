@@ -4,4 +4,6 @@ authors:
   - family-names: Shi
     given-names: Moji
     orcid: https://orcid.org/0000-0003-1274-654X
+  - family-names: Piet
+    given-names: Benjamin
 title: "A model predictive control approach for Quadrotor collision avoidance"
